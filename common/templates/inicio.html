@@ -1,0 +1,10 @@
+{%extends "base.html" %}
+
+{%block menu%}
+	<ul>
+		<li><a class="first current_page_item" href="/inicio/">Inicio</a></li>
+		<li><a href="/expediente/{{user.id}}/">Mi Expediente</a></li>
+		<li><a href="/personal/listar/">Personal</a></li>
+		<li><a href="/logout/">Salir</a></li>
+	</ul>		
+{%endblock%}
