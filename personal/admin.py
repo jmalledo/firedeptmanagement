@@ -1,15 +1,17 @@
 from django.contrib import admin
 from personal.models import Firefigther, Rank, RankChange, Condition, ConditionChange
-from common.models import TelephoneNumber, Degree, Course, School, Company, Address, City
-from common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline
+from common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
+    BasePerson, Person
+from common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
+    PersonAdmin, BasePersonAdmin
     
 class RankChangeInline(admin.StackedInline):
     model = RankChange
-    extra = 2
+    extra = 1
 
 class ConditionChangeInline(admin.StackedInline):
     model = ConditionChange
-    extra = 2
+    extra = 1
     
 class FirefigtherAdmin(admin.ModelAdmin):
     inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
@@ -25,3 +27,5 @@ admin.site.register(Company)
 admin.site.register(Condition)
 admin.site.register(Address)
 admin.site.register(City)
+admin.site.register(BasePerson, BasePersonAdmin)
+admin.site.register(Person, PersonAdmin)

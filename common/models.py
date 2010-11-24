@@ -81,7 +81,8 @@ class Company(models.Model):
     
     name = models.CharField(verbose_name = u'Nombre', max_length=100)
     address = models.ForeignKey(Address, null=True, blank=True, verbose_name = 'Dirección')
-    telephone_number = models.ForeignKey(TelephoneNumber, null=True, blank=True)
+    rif = models.CharField(verbose_name = u'RIF', null=True, blank=True, max_length=10)
+    website = models.CharField(verbose_name = u'Página Web', null=True, blank=True, max_length=50)
     
     def __unicode__(self):
         return self.name
@@ -135,6 +136,18 @@ class PersonTelephoneNumber(models.Model):
     
     def __unicode__(self):
         return "%s: %s-%s" % (self.type, self.code, self.number)
+
+class CompanyTelephoneNumber(models.Model):
+    class Meta:
+        verbose_name = u"Número Telefónico"
+        verbose_name_plural = u'Números Telefónicos'
+    
+    company = models.ForeignKey(Company)
+    telephone_number = models.ForeignKey(TelephoneNumber, null=True, blank=True)
+    
+    def __unicode__(self):
+        return "%s: %s-%s" % (self.type, self.code, self.number)
+
     
 class Person(BasePerson):
     class Meta:

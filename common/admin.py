@@ -1,5 +1,6 @@
 from django.contrib import admin
-from common.models import PersonDegree, PersonJob, PersonCourse, PersonAddress, PersonTelephoneNumber
+from common.models import PersonDegree, PersonJob, PersonCourse, PersonAddress, PersonTelephoneNumber,\
+    CompanyTelephoneNumber
 
 class PersonDegreeInline(admin.StackedInline):
     model = PersonDegree
@@ -16,11 +17,19 @@ class PersonCourseInline(admin.StackedInline):
     
 class PersonAddressInline(admin.StackedInline):
     model = PersonAddress
-    extra = 3
+    extra = 1
 
 class PersonTelephoneNumberInline(admin.StackedInline):
     model = PersonTelephoneNumber
-    extra = 3
+    extra = 1
     
 class PersonAdmin(admin.ModelAdmin):
-    inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline)
+    inlines = (PersonAddressInline, PersonTelephoneNumberInline)
+
+class BasePersonAdmin(admin.ModelAdmin):
+    inlines = (PersonTelephoneNumberInline,)
+
+
+class CompanyTelephoneNumberInline(admin.StackedInline):
+    model = CompanyTelephoneNumber
+    extra = 1
