@@ -92,6 +92,7 @@ INSTALLED_APPS = (
     'bomberos.common',
     'bomberos.personal',
     'django.contrib.admin',
+    'haystack'
 )
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'static/') 
@@ -108,3 +109,6 @@ STATICFILES_URL = '/static/'
 STATICFILES_DIRS = (
     STATICFILES_ROOT,
 )
+
+HAYSTACK_SITECONF = 'bomberos.search_sites'
+HAYSTACK_SEARCH_ENGINE = 'simple'
