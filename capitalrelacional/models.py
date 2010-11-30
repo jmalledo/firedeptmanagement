@@ -3,39 +3,52 @@ from django.db import models
 from common.models import BasePerson, Company
 from personal.models import Firefigther
 
-# Create your models here.
 CONTACT_TYPE_CHOICES = (
                          (u'C', u'Cliente'),
                          (u'O', u'Contacto'),
-                         )
-
-class RelationalPerson(BasePerson): 
-    observation = models.TextField(verbose_name = u'Observación')
-    type=models.CharField(verbose_name = u'Tipo', max_length=1, choices=CONTACT_TYPE_CHOICES)
+                         (u'A', u'Ambos'),
+                        )
     
+class RelationalPerson(BasePerson):
+    class Meta:
+        verbose_name = u"Persona"
+    observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)
+    type=models.CharField(verbose_name = u'Tipo', max_length=1, choices=CONTACT_TYPE_CHOICES, null=True, blank=True)
+         
 class RelationalCompany(Company):
+    class Meta:
+        verbose_name = u"Empresa"
  
     COMPANY_TYPE_CHOICES = (
                          (u'T', u'Cuerpo de Bomberos'),
                          (u'H', u'Hospitales'),
                          (u'R', u'Grupos de Rescate'),
                          (u'P', u'Empresa Privada'),
+                         (u'U', u'Dependencia USB'),
                          (u'G', u'Empresa Pública'),
                          (u'C', u'Agrupación Civil'),
                          (u'O', u'Otro'),
                          )
-    observation = models.TextField(verbose_name = u'Observación')
     person = models.ManyToManyField(RelationalPerson, through='Position')
     typecompany = models.CharField(verbose_name = u'Tipo de Empresa', max_length=1, choices=COMPANY_TYPE_CHOICES)
-    type = models.CharField(verbose_name = u'Tipo', max_length=1, choices=CONTACT_TYPE_CHOICES) 
+    observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)
+    type=models.CharField(verbose_name = u'Tipo', max_length=1, choices=CONTACT_TYPE_CHOICES, null=True, blank=True)
     
 class Position(models.Model):
-    person = models.ForeignKey(RelationalPerson)
-    company = models.ForeignKey(RelationalCompany)
-    position = models.CharField(max_length = 100,verbose_name = u'Posición en la Empresa')
-    
+    class Meta:
+        verbose_name = u"Cargo"
  
-class Relationship(models.Model):
-    relational_person = models.ForeignKey(RelationalPerson,  verbose_name = u'Persona Relacionada')
-    firefighter = models.ForeignKey(Firefigther,  verbose_name = u'Bombero Relacionado' )
     
+    person = models.ForeignKey(RelationalPerson, verbose_name=u"Persona")
+    company = models.ForeignKey(RelationalCompany, verbose_name=u"Compania")
+    position = models.CharField(max_length = 100,verbose_name = u'Posición en la Empresa')
+    observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)
+     
+class Relationship(models.Model):
+    class Meta:
+        verbose_name = u"Relación"
+        verbose_name_plural = u'Relaciones'
+ 
+    relational_person = models.ForeignKey(RelationalPerson,  verbose_name = u'Persona Relacionada', null=True, blank=True)
+    firefighter = models.ForeignKey(Firefigther,  verbose_name = u'Bombero Relacionado', null=True, blank=True )
+    observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)

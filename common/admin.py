@@ -29,7 +29,10 @@ class PersonAdmin(admin.ModelAdmin):
 class BasePersonAdmin(admin.ModelAdmin):
     inlines = (PersonTelephoneNumberInline,)
 
-
 class CompanyTelephoneNumberInline(admin.StackedInline):
     model = CompanyTelephoneNumber
     extra = 1
+
+class CompanyAdmin(admin.ModelAdmin):
+    inlines = (CompanyTelephoneNumberInline,)
+        

@@ -1,0 +1,47 @@
+{%extends "base.html" %}
+			{% block top_menu%}
+			{% endblock %}	
+
+{% block content %}
+	<div class="span-18" id="type">
+		<div class="span-4">Personal</div>	
+		<div class="span-4">Empresas</div>
+		<div class="span-5">Dependencias USB</div>
+		<div class="span-5 last">Centros Asistenciales/C. Bomberos/Rescate</div>
+	</div>	
+	<div class="span-18" id="search">
+		<div class="span-2 prepend-3">Buscar:</div>
+		<div class="span-4"><input type="text" name="query"/> </div>
+		<div class="span-1 last"><input type="submit" value="Enviar"/> </div>
+	</div>
+	
+	<div class="span-18 last" id="letter_selector">
+		{% for letter in "abcdefghijklmnñopqrstuvwxyz" %}
+			<div style="float: left;"> &nbsp;&nbsp;&nbsp;{{letter}}&nbsp;&nbsp;&nbsp;</div>
+		{% endfor %}
+	</div>
+	<div class="span-18 last" id="search_results">
+		<table>
+			<thead>
+				<tr>
+					<td>Nombre</td>
+					<td>Telefono</td>
+					<td>Email/website</td>
+					<td>Acciones</td>
+				</tr>
+			</thead>
+			<tbody>
+				{%for entity in entities%}
+					<tr>
+						<td>{{entity.name}}</td>
+						<td>{{entity.telephone}}</td>
+						<td>{{entity.email}}</td>
+						<td></td>
+					</tr>
+				{%endfor%}
+			</tbody>
+		</table>
+	</div>
+		
+	
+{% endblock %}

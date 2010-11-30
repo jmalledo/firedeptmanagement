@@ -93,16 +93,6 @@ a:hover {
 	color: #666666;
 }
 
-/* Search */
-
-#search {
-	float: right;
-	width: 280px;
-	height: 60px;
-	padding: 20px 0px 0px 0px;
-	background: #F3F3EE;
-}
-
 #search form {
 	height: 41px;
 	margin: 0;

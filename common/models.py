@@ -9,6 +9,9 @@ class TelephoneNumber(models.Model):
         
     code = models.CharField(max_length=4, verbose_name = u'Código')
     number = models.CharField(max_length=7, verbose_name = u'Número')
+    
+    def __unicode__(self):
+        return "%s-%s" % (self.code, self.number)
 
 class City(models.Model):
     class Meta:
@@ -83,6 +86,7 @@ class Company(models.Model):
     address = models.ForeignKey(Address, null=True, blank=True, verbose_name = 'Dirección')
     rif = models.CharField(verbose_name = u'RIF', null=True, blank=True, max_length=10)
     website = models.CharField(verbose_name = u'Página Web', null=True, blank=True, max_length=50)
+    email = models.EmailField(null = True, blank = True, verbose_name = u'Email')
     
     def __unicode__(self):
         return self.name
@@ -106,7 +110,7 @@ class BasePerson(models.Model):
         (u'F', u'Femenino'),
     )
     
-    fist_name = models.CharField(verbose_name = u'Primer Nombre', max_length=100)
+    first_name = models.CharField(verbose_name = u'Primer Nombre', max_length=100)
     first_name_2 = models.CharField(verbose_name = u'Segundo Nombre', max_length=100, null=True, blank=True)
     last_name = models.CharField(verbose_name = u'Primer Apellido', max_length=100)
     last_name_2 = models.CharField(verbose_name = u'Segundo Apellido', max_length=100, null=True, blank=True)
@@ -132,10 +136,11 @@ class PersonTelephoneNumber(models.Model):
     
     person = models.ForeignKey(BasePerson)
     type = models.CharField(verbose_name = u'Tipo', max_length=1, choices=TELEPHONE_TYPE_CHOICES)
-    telephone_number = models.ForeignKey(TelephoneNumber, null=True, blank=True)
+    telephone_number = models.ForeignKey(TelephoneNumber)
+    main = models.BooleanField(verbose_name = 'Principal', default=True)
     
     def __unicode__(self):
-        return "%s: %s-%s" % (self.type, self.code, self.number)
+        return str(self.telephone_number)
 
 class CompanyTelephoneNumber(models.Model):
     class Meta:
@@ -143,10 +148,11 @@ class CompanyTelephoneNumber(models.Model):
         verbose_name_plural = u'Números Telefónicos'
     
     company = models.ForeignKey(Company)
-    telephone_number = models.ForeignKey(TelephoneNumber, null=True, blank=True)
+    telephone_number = models.ForeignKey(TelephoneNumber)
+    main = models.BooleanField(verbose_name = 'Principal', default=True)
     
     def __unicode__(self):
-        return "%s: %s-%s" % (self.type, self.code, self.number)
+        return str(self.telephone_number)
 
     
 class Person(BasePerson):
