@@ -14,12 +14,10 @@ class RelatedIndex(RealTimeSearchIndex):
     email = CharField(indexed=False)
     
     def prepare(self, instance):
-        print "AQUI"    
+        self.prepared_data = super(RelatedIndex, self).prepare(object)
+        data = self.prepared_data
+        raise Exception
         if type(instance)  == RelationalPerson:
-            print "AQUI"    
-            self.prepared_data = super(RelationalPerson, self).prepare(instance)
-            print instance
-            data = self.prepared_data
             data['text'] = "%s %s %s %s %s" % (instance.first_name, instance.first_name_2, instance.last_name, instance.last_name_2, instance.id_document)
             data["name"] = "%s %s" % (instance.first_name, instance.last_name)
             data['model'] = 'RelationalPerson'
@@ -27,16 +25,13 @@ class RelatedIndex(RealTimeSearchIndex):
             data['telephone'] = instance.persontelephonenumber_set.filter(main=True)
             data['email'] = instance.primary_email
         elif type(instance)  == RelationalCompany:
-            print "AQUI"
-            self.prepared_data = super(RelationalCompany, self).prepare(instance)
-            print instance
-            data = self.prepared_data
             data['text'] = "%s %s" % (instance.name, instance.rif)
-#            data["name"] = "%s %s" % instance.name
+            data["name"] = "%s %s" % instance.name
             data['model'] = 'RelationalCompany'
             data['type_company'] = instance.typecompany
             data['telephone'] = instance.companytelephonenumber_set.filter(main=True)
             data['email'] = instance.website
+        data["name"] = "guacho"
         return data
 
 
