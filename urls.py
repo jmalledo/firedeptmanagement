@@ -5,11 +5,10 @@ from django.contrib import admin
 admin.autodiscover()
 
 urlpatterns = patterns('',
-                       (r'^$', 'common.views.base'),
-                       (r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': MEDIA_ROOT}),
-                       (r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
-                       (r'^logout/$', 'django.contrib.auth.views.logout_then_login'),
-                       (r'^inicio/$', 'common.views.front_page'),
+                       url(r'^$', 'common.views.base'),
+                       url(r'^static/(?P<path>.*)$', 'django.views.static.serve', {'document_root': MEDIA_ROOT}),
+                       url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
+                       url(r'^logout/$', 'django.contrib.auth.views.logout_then_login'),
 
     # Example:
     # (r'^bomberos/', include('bomberos.foo.urls')),

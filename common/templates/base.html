@@ -2,44 +2,53 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=utf-8" />
-<title>C.B.V.U.S.B.</title>
-<link href="/static/css/style.css" rel="stylesheet" type="text/css" media="screen" />
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<title>C.B.V.U.S.B.</title>
+	<link rel="stylesheet" href="/static/css/blueprint/src/reset.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/css/blueprint/src/grid.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/css/blueprint/src/forms.css" type="text/css" media="screen" />
+	<!--[if IE]>
+		<link rel="stylesheet" href="blueprint/ie.css" type="text/css" media="screen" />
+	<![endif]-->	
+	<link rel="stylesheet" href="/static/css/blueprint/src/typography.css" type="text/css" media="screen" />
+	<link rel="stylesheet" href="/static/css/style.css" type="text/css" media="screen" />
 </head>
 <body>
-<div id="header-wrapper">
-
-	<div id="header">
-		<div id="menu">
-		{%block menu%}
-		
-		{%endblock%}
-		</div> 
-	</div>
-</div>
-<!-- end #header -->
-<!-- end #header-wrapper -->
-<div id="logo">
-	<h1>Bomberos Voluntarios USB</h1>
-	<p><em>Sistema de Gestión Integral</em></p>
-</div>
-<hr />
-<!-- end #logo -->
-<div id="page">
-	<div id="page-bgtop">
-		<div id="content">
-		{%block content%}
-		
-		{%endblock%}
+<div class="container">
+	<div class="span-24" id="header">
+		<div class="span-12" id="logo">
+			<h1><a href="/">B<span>omberos</span>USB  </a></h1>
+			<p>Sistema de Gestión Integral</p>
+			<br />
 		</div>
-		<!-- end #content -->
-		<div style="clear: both;">&nbsp;</div>
+		<div class="span-12" id="menu">
+			{% block top_menu%}
+			<ul>
+				<li class="current_page_item"><a href="/">Inicio</a></li>
+				<li><a href="#">Personal</a></li>
+				<li><a href="#">Operaciones</a></li>
+				<li><a href="#">Prevención</a></li>
+				<li><a href="/logout">Salir</a></li>
+			</ul>
+			{% endblock %}	
+		</div>
 	</div>
-	<!-- end #page -->
-	<div id="footer">
-		<p></p>
+	<div class="span-24" id="body">
+		<div class="span-6 sidebar" id="left_menu">
+			{% block left_menu %}
+			&nbsp;			
+			{% endblock %}
+		</div>
+	
+		<div class="span-18 last" id="main_content">
+			{% block content %}
+			&nbsp;
+			{% endblock %}
+		</div>
+	
 	</div>
-	<!-- end #footer -->
+	
+	<div class="span-24" id="footer">
+		<p>Copyright (c) 2010 BomberosUSB. Todos los derechos reservados.</p>
+	</div>
 </div>
-</body>
-</html>

@@ -1,25 +1,35 @@
 {%extends "base.html" %}
 
+{% block top_menu %}
+
+{% endblock %}
 {% block content %}
 
-{% if form.errors %}
-<p>Usuario y/o Contraseña incorrectos</p>
-{% endif %}
-
-<form method="post" action="{% url django.contrib.auth.views.login %}">{% csrf_token %}
-<table>
-<tr>
-    <td>Nombre de Usuario: </td>
-    <td>{{ form.username }}</td>
-</tr>
-<tr>
-    <td>Contraseña:</td>
-    <td>{{ form.password }}</td>
-</tr>
-</table>
-
-<input type="submit" value="Entrar" />
-<input type="hidden" name="next" value="/inicio/" />
-</form>
+	<div class="span-12 login" id="main_content">
+		{% if form.errors %}
+			<div class="error">Usuario y/o Contraseña incorrectos</div>
+		{% endif %}
+		<form method="post" action="{% url django.contrib.auth.views.login %}">{% csrf_token %}
+			<div>
+				<div class="span-6">
+					Nombre de Usuario:
+				</div>
+				<div class="span-6 last">
+					{{ form.username }}
+				</div>
+			</div>
+			<div>
+				<div class="span-6">
+					Contraseña:
+				</div>
+				<div class="span-6 last">
+					{{ form.password }}
+				</div>
+			</div>
+			
+			<input type="submit" value="Entrar" />
+			<input type="hidden" name="next" value="/" />
+		</form>
+	</div>
 
 {% endblock %}
