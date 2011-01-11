@@ -1,10 +1,27 @@
 {%extends "base.html" %}
 			{% block top_menu%}
 			{% endblock %}	
+			{% block left_menu %}
+	<ul>
+		<li>
+			<div style="clear: both;">&nbsp;</div>
+		</li>
+		<li>
+			<h2>Accesos Directos</h2>
+			<ul>
+				<li><a href="/">Inicio</a></li>
+				<li><a href="{% url directorio %}">Directorio</a></li>
+			</ul>
+		</li>
+	</ul>
 
+<!-- end #sidebar -->
+<div style="clear: both;">&nbsp;</div>				
+{% endblock %}
 {% block content %}
+	<!--  
 	<div class="span-18" id="type">
-		<div class="span-4">Personal</div>	
+		<div class="span-4">Personas</div>	
 		<div class="span-4">Empresas</div>
 		<div class="span-5">Dependencias USB</div>
 		<div class="span-5 last">Centros Asistenciales/C. Bomberos/Rescate</div>
@@ -20,16 +37,55 @@
 			<div style="float: left;"> &nbsp;&nbsp;&nbsp;{{letter}}&nbsp;&nbsp;&nbsp;</div>
 		{% endfor %}
 	</div>
-	<div class="span-18 last" id="search_results">
+	-->
+	
+	<form method="get">
+		<div class="span-7 prepend-2" id="query_div">
+			<label for="query">Busqueda:</label> 
+			<input type="text" name="query"/>
+		</div>
+		
+		<div class="prepend-2 span-7 last append-2" id="letter_div">
+		<label for="letter">Empieza por:</label>
+		<select name="letter">
+				<option value="">--</option>
+			{% for letter in "abcdefghijklmnñopqrstuvwxyz" %}
+				<option value="{{letter}}" >{{letter}}</option>
+			{% endfor %}
+		</select>
+		</div>
+
+		<div class="span-13 prepend-5 append-5 last" id="type_div">
+		<select multiple="multiple" name="type" dir="rtl">
+			<option value="B">Bomberos</option>
+			<option value="L">Personas</option>
+			<option value="T">Cuerpo de Bomberos</option>
+			<option value="H">Hospitales</option>
+			<option value="R">Grupos de Rescate</option>
+			<option value="P">Empresa Privada</option>
+			<option value="U">Dependencia USB</option>
+			<option value="G">Empresa Pública</option>
+			<option value="C">Agrupación Civil</option>
+			<option value="O">Otro</option>
+		</select>
+		</div>
+		<div class="span-12 prepend-6 last" id="submit_div">
+			<input type="submit" value="Buscar"/>
+		</div>
+	</form>
+	
+	<div class="span-18 last" id="search_results" style="margin-top:50px;margin-bottom:50px;height: 420px">
 		<table>
+			{%if entities%}
 			<thead>
 				<tr>
 					<td>Nombre</td>
-					<td>Telefono</td>
-					<td>Email/website</td>
+					<td>Teléfono</td>
+					<td>Email / Website</td>
 					<td>Acciones</td>
 				</tr>
 			</thead>
+			{% endif %}
 			<tbody>
 				{%for entity in entities%}
 					<tr>
@@ -38,10 +94,31 @@
 						<td>{{entity.email}}</td>
 						<td></td>
 					</tr>
+				{%empty%}
+					Lo sentimos, no hay resultados que coincidan con los términos de búsqueda. Haz click <a href="{% url directorio %}">aquí</a> para comenzar la búsqueda
 				{%endfor%}
 			</tbody>
 		</table>
 	</div>
-		
+	
+	<div class="prepend-5 span-13 last" style="margin-bottom:50px;">
+	    <span class="step-links">
+	        {% if page.has_previous %}
+	            <a href="{%if previous%}?{{previous}}&page={{ page.previous_page_number }}{%else%}?page={{ page.previous_page_number }}{%endif%}">&nbsp;&lt;&lt;</a>
+	        {%else%}
+	        	&nbsp;&lt;&lt;
+	        {% endif %}
+	
+	        <span class="current">
+	            Página {{ page.number }} de {{ page.paginator.num_pages }}.
+	        </span>
+	
+	        {% if page.has_next %}
+	            <a href="{%if previous%}?{{previous}}&page={{ page.next_page_number }}{%else%}?page={{ page.next_page_number }}{%endif%}">&nbsp;&gt;&gt;</a>
+	        {%else%}
+	        	&nbsp;&gt;&gt;
+	        {% endif %}
+	    </span>
+	</div>
 	
 {% endblock %}

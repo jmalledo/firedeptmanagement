@@ -112,4 +112,5 @@ STATICFILES_DIRS = (
 )
 
 HAYSTACK_SITECONF = 'bomberos.search_sites'
-HAYSTACK_SEARCH_ENGINE = 'simple'
+HAYSTACK_SEARCH_ENGINE = 'xapian'
+HAYSTACK_XAPIAN_PATH = os.path.join(PROJECT_ROOT, 'xapian_index')

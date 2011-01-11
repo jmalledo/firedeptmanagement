@@ -29,6 +29,7 @@ class RelationalCompany(Company):
                          (u'C', u'Agrupación Civil'),
                          (u'O', u'Otro'),
                          )
+    
     person = models.ManyToManyField(RelationalPerson, through='Position')
     typecompany = models.CharField(verbose_name = u'Tipo de Empresa', max_length=1, choices=COMPANY_TYPE_CHOICES)
     observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)

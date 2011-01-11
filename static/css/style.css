@@ -344,8 +344,18 @@ a:hover {
 
 #footer a {
 	color: #767676;
+	
 }
 
 .login {
 	margin-bottom: 50px;
+}
+
+tbody tr:nth-child(even) td, tbody tr.even td {
+background: #E5ECF9;
+color: black;
+}
+
+thead tr td {
+	color: #FFC200;
 }
