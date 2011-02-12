@@ -3,3 +3,6 @@
 .pydevproject
 .settings
 *~
+xapian_index/
+whosh_index/
+sqlite.db

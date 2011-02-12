@@ -99,9 +99,11 @@ INSTALLED_APPS = (
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'static/') 
 MEDIA_URL = '/static/'
 
-LOGIN_URL = "/login/"
-LOGOUT_URL = "/logout/"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_URL = "/gestion/login/"
+LOGOUT_URL = "/gestion/logout/"
+
+LOGIN_REDIRECT_URL = "/gestion/"
+
 MAPS_API_KEY = 'ABQIAAAAC9qtn8fifBU1scZsYSdD3hRyNcmkjfmyJTu_rNjoMEKRn-36KhT0opYry6Cx117u6ZYd2yHmDXADxw'
 
 STATICFILES_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/')
@@ -114,3 +116,4 @@ STATICFILES_DIRS = (
 HAYSTACK_SITECONF = 'bomberos.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'xapian'
 HAYSTACK_XAPIAN_PATH = os.path.join(PROJECT_ROOT, 'xapian_index')
+HAYSTACK_WHOOSH_PATH = os.path.join(PROJECT_ROOT, 'whoosh_index')

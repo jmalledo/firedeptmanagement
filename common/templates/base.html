@@ -24,11 +24,11 @@
 		<div class="span-12" id="menu">
 			{% block top_menu%}
 			<ul>
-				<li class="current_page_item"><a href="/">Inicio</a></li>
+				<li class="current_page_item"><a href="{% url base %}">Inicio</a></li>
 				<li><a href="#">Personal</a></li>
 				<li><a href="#">Operaciones</a></li>
 				<li><a href="#">Prevención</a></li>
-				<li><a href="/logout">Salir</a></li>
+				<li><a href="{% url logout %}">Salir</a></li>
 			</ul>
 			{% endblock %}	
 		</div>
