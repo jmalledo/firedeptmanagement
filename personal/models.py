@@ -4,7 +4,7 @@ from common.models import Person
 
 class Rank(models.Model):
     name = models.CharField(max_length=30)
-    abrev = models.CharField(max_length=6)
+    abrev = models.CharField(max_length=12)
     type = models.CharField(max_length=20)
     
     class Meta:
