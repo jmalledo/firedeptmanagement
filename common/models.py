@@ -160,7 +160,7 @@ class Person(BasePerson):
         verbose_name = u"Persona"
     
     birth_date = models.DateField(verbose_name = u'Fecha de Nacimiento', null=True, blank=True)
-    birth_place = models.OneToOneField(Address, related_name='born_here', verbose_name = 'Lugar de Nacimiento')
+    birth_place = models.OneToOneField(Address, related_name='born_here', verbose_name = 'Lugar de Nacimiento', null=True)
     picture = models.ImageField(upload_to="images/persons/", null=True, blank=True, verbose_name = 'Foto')
     addresses = models.ManyToManyField(Address, verbose_name = u'Direcciones', through="PersonAddress", null=True)
     degrees = models.ManyToManyField(Degree, through="PersonDegree", null=True, verbose_name = u'Estudios')
