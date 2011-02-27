@@ -29,7 +29,7 @@ class Firefigther(Person):
         (u'-', u'Negativo'),
     )
     
-    blood_type = models.CharField(max_length=1, choices=BLOOD_TYPE_CHOICES, null=True, blank=True, verbose_name = u'Factor Sanguineo')
+    blood_type = models.CharField(max_length=2, choices=BLOOD_TYPE_CHOICES, null=True, blank=True, verbose_name = u'Factor Sanguineo')
     blood_type_rh = models.CharField(max_length=1, choices=BLOOD_RH_CHOICES, null=True, blank=True, verbose_name = u'RH')
     initials = models.CharField(max_length=4, null=True, blank=True, verbose_name = u'Iniciales')
     number = models.SmallIntegerField(null=True, blank=True, verbose_name = u'Número de Carnet')
