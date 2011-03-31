@@ -25,7 +25,7 @@ class RelatedIndex(RealTimeSearchIndex):
             data['type'] = instance.type
             data['type_company'] = "L"
             phones = instance.persontelephonenumber_set.filter(main=True)
-            data['telephone'] = phones[0] if len(phones) > 0 else "" 
+            data['telephone'] = str(phones[0]) if len(phones) > 0 else "" 
             data['email'] = instance.primary_email
         elif type(instance)  == RelationalCompany:
             data['text'] = "%s %s" % (instance.name, instance.rif)
@@ -34,14 +34,14 @@ class RelatedIndex(RealTimeSearchIndex):
             data['type'] = instance.type
             data['type_company'] = instance.typecompany
             phones = instance.companytelephonenumber_set.filter(main=True)
-            data['telephone'] =  phones[0] if len(phones) > 0 else ""
+            data['telephone'] =  str(phones[0]) if len(phones) > 0 else ""
             data['email'] = instance.website
         elif type(instance)  == Firefigther:
             data['text'] = "%s %s %s %s %s %d" % (instance.first_name, instance.first_name_2, instance.last_name, instance.last_name_2, instance.id_document, instance.number)
             data["name"] = "%s %s" % (instance.first_name, instance.last_name)
             data['model'] = 'Firefigther'
             phones = instance.persontelephonenumber_set.filter(main=True)
-            data['telephone'] = phones[0] if len(phones) > 0 else "" 
+            data['telephone'] = str(phones[0]) if len(phones) > 0 else "" 
             data['email'] = instance.primary_email
             data['type'] = "B"
             data['type_company'] = 'B'
