@@ -5,7 +5,11 @@ INSTALLED_APPS += [
     'whoosh_tests',
 ]
 
-HAYSTACK_SEARCH_ENGINE = 'whoosh'
-HAYSTACK_WHOOSH_PATH = os.path.join('tmp', 'test_whoosh_query')
-HAYSTACK_INCLUDE_SPELLING = True
-# HAYSTACK_WHOOSH_STORAGE = 'ram'
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'haystack.backends.whoosh_backend.WhooshEngine',
+        'PATH': os.path.join('tmp', 'test_whoosh_query'),
+        'INCLUDE_SPELLING': True,
+        # 'STORAGE': 'ram',
+    },
+}

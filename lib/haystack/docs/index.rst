@@ -13,9 +13,10 @@ Whoosh_, Xapian_, etc.) without having to modify your code.
 .. note::
 
     This documentation represents the development version of Haystack. For
-    old versions of the documentation: `1.0`_.
+    old versions of the documentation: `1.0`_, `1.1`_.
 
 .. _`1.0`: http://docs.haystacksearch.org/1.0/
+.. _`1.1`: http://docs.haystacksearch.org/1.1/
 
 Getting Started
 ---------------
@@ -40,6 +41,8 @@ you up and running:
    other_apps
    installing_search_engines
    debugging
+   
+   migration_from_1_to_2
 
 
 Advanced Uses
@@ -54,8 +57,9 @@ you may want to include in your application.
    best_practices
    highlighting
    faceting
+   autocomplete
    boost
-   do_not_try_this_at_home
+   multiple_index
 
 
 Reference
@@ -71,7 +75,6 @@ looking for API documentation and advanced usage as detailed in:
    searchindex_api
    searchfield_api
    searchresult_api
-   searchsite_api
    searchquery_api
    searchbackend_api
    

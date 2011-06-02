@@ -1,15 +1,15 @@
 import datetime
-from django.conf import settings
 from django.test import TestCase
+from haystack import connections
+from haystack.models import SearchResult
 from haystack.query import SQ
-from haystack.backends.solr_backend import SearchBackend, SearchQuery
 from core.models import MockModel, AnotherMockModel
 
 
 class SolrSearchQueryTestCase(TestCase):
     def setUp(self):
         super(SolrSearchQueryTestCase, self).setUp()
-        self.sq = SearchQuery(backend=SearchBackend())
+        self.sq = connections['default'].get_query()
     
     def test_build_query_all(self):
         self.assertEqual(self.sq.build_query(), '*:*')
@@ -76,6 +76,11 @@ class SolrSearchQueryTestCase(TestCase):
         self.sq.add_filter(SQ(pub_date__in=[datetime.datetime(2009, 7, 6, 1, 56, 21)]))
         self.assertEqual(self.sq.build_query(), u'(why AND (pub_date:"2009-07-06T01:56:21Z"))')
     
+    def test_build_query_in_with_set(self):
+        self.sq.add_filter(SQ(content='why'))
+        self.sq.add_filter(SQ(title__in=set(["A Famous Paper", "An Infamous Article"])))
+        self.assertEqual(self.sq.build_query(), u'(why AND (title:"A Famous Paper" OR title:"An Infamous Article"))')
+    
     def test_build_query_wildcard_filter_types(self):
         self.sq.add_filter(SQ(content='why'))
         self.sq.add_filter(SQ(title__startswith='haystack'))
@@ -94,3 +99,23 @@ class SolrSearchQueryTestCase(TestCase):
         
         self.sq.add_model(AnotherMockModel)
         self.assertEqual(self.sq.build_query(), u'(hello) AND (django_ct:core.anothermockmodel OR django_ct:core.mockmodel)')
+    
+    def test_set_result_class(self):
+        # Assert that we're defaulting to ``SearchResult``.
+        self.assertTrue(issubclass(self.sq.result_class, SearchResult))
+        
+        # Custom class.
+        class IttyBittyResult(object):
+            pass
+        
+        self.sq.set_result_class(IttyBittyResult)
+        self.assertTrue(issubclass(self.sq.result_class, IttyBittyResult))
+        
+        # Reset to default.
+        self.sq.set_result_class(None)
+        self.assertTrue(issubclass(self.sq.result_class, SearchResult))
+    
+    def test_in_filter_values_list(self):
+        self.sq.add_filter(SQ(content='why'))
+        self.sq.add_filter(SQ(title__in=MockModel.objects.values_list('id', flat=True)))
+        self.assertEqual(self.sq.build_query(), u'(why AND (title:"1" OR title:"2" OR title:"3"))')

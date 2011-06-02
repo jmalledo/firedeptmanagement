@@ -1,20 +1,17 @@
 # -*- coding: utf-8 -*-
 import datetime
+from decimal import Decimal
 import logging
 import pysolr
 from django.conf import settings
 from django.test import TestCase
-from haystack import backends
-from haystack.indexes import *
-from haystack.backends.solr_backend import SearchBackend, SearchQuery
-from haystack.exceptions import HaystackError
+from haystack import connections, connection_router, reset_search_queries
+from haystack import indexes
+from haystack.models import SearchResult
 from haystack.query import SearchQuerySet, RelatedSearchQuerySet, SQ
-from haystack.sites import SearchSite
+from haystack.utils.loading import UnifiedIndex
 from core.models import MockModel, AnotherMockModel, AFourthMockModel
-try:
-    set
-except NameError:
-    from sets import Set as set
+from core.tests.mocks import MockSearchResult
 
 test_pickling = True
 
@@ -30,60 +27,79 @@ except ImportError:
 def clear_solr_index():
     # Wipe it clean.
     print 'Clearing out Solr...'
-    raw_solr = pysolr.Solr(settings.HAYSTACK_SOLR_URL)
+    raw_solr = pysolr.Solr(settings.HAYSTACK_CONNECTIONS['default']['URL'])
     raw_solr.delete(q='*:*')
 
 
-class SolrMockSearchIndex(SearchIndex):
-    text = CharField(document=True, use_template=True)
-    name = CharField(model_attr='author', faceted=True)
-    pub_date = DateField(model_attr='pub_date')
+class SolrMockSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(document=True, use_template=True)
+    name = indexes.CharField(model_attr='author', faceted=True)
+    pub_date = indexes.DateField(model_attr='pub_date')
+    
+    def get_model(self):
+        return MockModel
 
 
-class SolrMaintainTypeMockSearchIndex(SearchIndex):
-    text = CharField(document=True, use_template=True)
-    month = CharField(indexed=False)
-    pub_date = DateField(model_attr='pub_date')
+class SolrMaintainTypeMockSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(document=True, use_template=True)
+    month = indexes.CharField(indexed=False)
+    pub_date = indexes.DateField(model_attr='pub_date')
     
     def prepare_month(self, obj):
         return "%02d" % obj.pub_date.month
+    
+    def get_model(self):
+        return MockModel
 
 
-class SolrMockModelSearchIndex(SearchIndex):
-    text = CharField(model_attr='foo', document=True)
-    name = CharField(model_attr='author')
-    pub_date = DateField(model_attr='pub_date')
+class SolrMockModelSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(model_attr='foo', document=True)
+    name = indexes.CharField(model_attr='author')
+    pub_date = indexes.DateField(model_attr='pub_date')
+    
+    def get_model(self):
+        return MockModel
 
 
-class SolrAnotherMockModelSearchIndex(SearchIndex):
-    text = CharField(document=True)
-    name = CharField(model_attr='author')
-    pub_date = DateField(model_attr='pub_date')
+class SolrAnotherMockModelSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(document=True)
+    name = indexes.CharField(model_attr='author')
+    pub_date = indexes.DateField(model_attr='pub_date')
+    
+    def get_model(self):
+        return AnotherMockModel
     
     def prepare_text(self, obj):
         return u"You might be searching for the user %s" % obj.author
 
 
-class SolrBoostMockSearchIndex(SearchIndex):
-    text = CharField(
+class SolrBoostMockSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(
         document=True, use_template=True,
         template_name='search/indexes/core/mockmodel_template.txt'
     )
-    author = CharField(model_attr='author', weight=2.0)
-    editor = CharField(model_attr='editor')
-    pub_date = DateField(model_attr='pub_date')
+    author = indexes.CharField(model_attr='author', weight=2.0)
+    editor = indexes.CharField(model_attr='editor')
+    pub_date = indexes.DateField(model_attr='pub_date')
+    
+    def get_model(self):
+        return AFourthMockModel
 
 
-class SolrRoundTripSearchIndex(SearchIndex):
-    text = CharField(document=True, default='')
-    name = CharField()
-    is_active = BooleanField()
-    post_count = IntegerField()
-    average_rating = FloatField()
-    pub_date = DateField()
-    created = DateTimeField()
-    tags = MultiValueField()
-    sites = MultiValueField()
+class SolrRoundTripSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(document=True, default='')
+    name = indexes.CharField()
+    is_active = indexes.BooleanField()
+    post_count = indexes.IntegerField()
+    average_rating = indexes.FloatField()
+    price = indexes.DecimalField()
+    pub_date = indexes.DateField()
+    created = indexes.DateTimeField()
+    tags = indexes.MultiValueField()
+    sites = indexes.MultiValueField()
+    
+    def get_model(self):
+        return MockModel
     
     def prepare(self, obj):
         prepped = super(SolrRoundTripSearchIndex, self).prepare(obj)
@@ -93,6 +109,7 @@ class SolrRoundTripSearchIndex(SearchIndex):
             'is_active': True,
             'post_count': 25,
             'average_rating': 3.6,
+            'price': Decimal('24.99'),
             'pub_date': datetime.date(2009, 11, 21),
             'created': datetime.datetime(2009, 11, 21, 21, 31, 00),
             'tags': ['staff', 'outdoor', 'activist', 'scientist'],
@@ -101,16 +118,30 @@ class SolrRoundTripSearchIndex(SearchIndex):
         return prepped
 
 
-class SolrComplexFacetsMockSearchIndex(SearchIndex):
-    text = CharField(document=True, default='')
-    name = CharField(faceted=True)
-    is_active = BooleanField(faceted=True)
-    post_count = IntegerField()
-    post_count_i = FacetIntegerField(facet_for='post_count')
-    average_rating = FloatField(faceted=True)
-    pub_date = DateField(faceted=True)
-    created = DateTimeField(faceted=True)
-    sites = MultiValueField(faceted=True)
+class SolrComplexFacetsMockSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(document=True, default='')
+    name = indexes.CharField(faceted=True)
+    is_active = indexes.BooleanField(faceted=True)
+    post_count = indexes.IntegerField()
+    post_count_i = indexes.FacetIntegerField(facet_for='post_count')
+    average_rating = indexes.FloatField(faceted=True)
+    pub_date = indexes.DateField(faceted=True)
+    created = indexes.DateTimeField(faceted=True)
+    sites = indexes.MultiValueField(faceted=True)
+    
+    def get_model(self):
+        return MockModel
+
+
+class SolrAutocompleteMockModelSearchIndex(indexes.SearchIndex):
+    text = indexes.CharField(model_attr='foo', document=True)
+    name = indexes.CharField(model_attr='author')
+    pub_date = indexes.DateField(model_attr='pub_date')
+    text_auto = indexes.EdgeNgramField(model_attr='foo')
+    name_auto = indexes.EdgeNgramField(model_attr='author')
+    
+    def get_model(self):
+        return MockModel
 
 
 class SolrSearchBackendTestCase(TestCase):
@@ -118,19 +149,17 @@ class SolrSearchBackendTestCase(TestCase):
         super(SolrSearchBackendTestCase, self).setUp()
         
         # Wipe it clean.
-        self.raw_solr = pysolr.Solr(settings.HAYSTACK_SOLR_URL)
+        self.raw_solr = pysolr.Solr(settings.HAYSTACK_CONNECTIONS['default']['URL'])
         clear_solr_index()
         
-        self.site = SearchSite()
-        self.sb = SearchBackend(site=self.site)
-        self.smmi = SolrMockSearchIndex(MockModel, backend=self.sb)
-        self.smtmmi = SolrMaintainTypeMockSearchIndex(MockModel, backend=self.sb)
-        self.site.register(MockModel, SolrMockSearchIndex)
-        
         # Stow.
-        import haystack
-        self.old_site = haystack.site
-        haystack.site = self.site
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrMockSearchIndex()
+        self.smtmmi = SolrMaintainTypeMockSearchIndex()
+        self.ui.build(indexes=[self.smmi])
+        connections['default']._index = self.ui
+        self.sb = connections['default'].get_backend()
         
         self.sample_objs = []
         
@@ -142,8 +171,7 @@ class SolrSearchBackendTestCase(TestCase):
             self.sample_objs.append(mock)
     
     def tearDown(self):
-        import haystack
-        haystack.site = self.old_site
+        connections['default']._index = self.old_ui
         super(SolrSearchBackendTestCase, self).tearDown()
     
     def test_update(self):
@@ -243,7 +271,7 @@ class SolrSearchBackendTestCase(TestCase):
         self.assertEqual([result.highlighted['text'][0] for result in self.sb.search('Index', highlight=True)['results']], ['<em>Indexed</em>!\n1', '<em>Indexed</em>!\n2', '<em>Indexed</em>!\n3'])
         
         self.assertEqual(self.sb.search('Indx')['hits'], 0)
-        self.assertEqual(self.sb.search('Indx')['spelling_suggestion'], 'index')
+        self.assertEqual(self.sb.search('indax')['spelling_suggestion'], 'index')
         self.assertEqual(self.sb.search('Indx', spelling_query='indexy')['spelling_suggestion'], 'index')
         
         self.assertEqual(self.sb.search('', facets=['name']), {'hits': 0, 'results': []})
@@ -265,6 +293,9 @@ class SolrSearchBackendTestCase(TestCase):
         self.assertEqual(self.sb.search('', narrow_queries=set(['name:daniel1'])), {'hits': 0, 'results': []})
         results = self.sb.search('Index', narrow_queries=set(['name:daniel1']))
         self.assertEqual(results['hits'], 1)
+        
+        # Ensure that swapping the ``result_class`` works.
+        self.assertTrue(isinstance(self.sb.search(u'index document', result_class=MockSearchResult)['results'][0], MockSearchResult))
         
         # Check the use of ``limit_to_registered_models``.
         self.assertEqual(self.sb.search('', limit_to_registered_models=False), {'hits': 0, 'results': []})
@@ -292,7 +323,9 @@ class SolrSearchBackendTestCase(TestCase):
         self.assertEqual([result.pk for result in self.sb.more_like_this(self.sample_objs[0])['results']], [])
     
     def test_build_schema(self):
-        (content_field_name, fields) = self.sb.build_schema(self.site.all_searchfields())
+        old_ui = connections['default'].get_unified_index()
+        
+        (content_field_name, fields) = self.sb.build_schema(old_ui.all_searchfields())
         self.assertEqual(content_field_name, 'text')
         self.assertEqual(len(fields), 4)
         self.assertEqual(fields, [
@@ -326,127 +359,132 @@ class SolrSearchBackendTestCase(TestCase):
             }
         ])
         
-        self.site.unregister(MockModel)
-        self.site.register(MockModel, SolrComplexFacetsMockSearchIndex)
-        (content_field_name, fields) = self.sb.build_schema(self.site.all_searchfields())
+        ui = UnifiedIndex()
+        ui.build(indexes=[SolrComplexFacetsMockSearchIndex()])
+        (content_field_name, fields) = self.sb.build_schema(ui.all_searchfields())
         self.assertEqual(content_field_name, 'text')
         self.assertEqual(len(fields), 15)
+        fields = sorted(fields, key=lambda field: field['field_name'])
         self.assertEqual(fields, [
             {
-                'indexed': 'true',
-                'type': 'text',
-                'stored': 'true',
-                'field_name': 'name',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'boolean',
-                'stored': 'true',
-                'field_name': 'is_active_exact',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'date',
-                'stored': 'true',
-                'field_name': 'created',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'slong',
-                'stored': 'true',
-                'field_name': 'post_count',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'date',
-                'stored': 'true',
-                'field_name': 'created_exact',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'string',
-                'stored': 'true',
-                'field_name': 'sites_exact',
-                'multi_valued': 'true'
-            },
-            {
-                'indexed': 'true',
-                'type': 'boolean',
-                'stored': 'true',
-                'field_name': 'is_active',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'text',
-                'stored': 'true',
-                'field_name': 'sites',
-                'multi_valued': 'true'
-            },
-            {
-                'indexed': 'true',
-                'type': 'slong',
-                'stored': 'true',
-                'field_name': 'post_count_i',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'sfloat',
-                'stored': 'true',
                 'field_name': 'average_rating',
-                'multi_valued': 'false'
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'sfloat'
             },
             {
-                'indexed': 'true',
-                'type': 'text',
-                'stored': 'true',
-                'field_name': 'text',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'date',
-                'stored': 'true',
-                'field_name': 'pub_date_exact',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'string',
-                'stored': 'true',
-                'field_name': 'name_exact',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'date',
-                'stored': 'true',
-                'field_name': 'pub_date',
-                'multi_valued': 'false'
-            },
-            {
-                'indexed': 'true',
-                'type': 'sfloat',
-                'stored': 'true',
                 'field_name': 'average_rating_exact',
-                'multi_valued': 'false'
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'sfloat'
+            },
+            {
+                'field_name': 'created',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'date'
+            },
+            {
+                'field_name': 'created_exact',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'date'
+            },
+            {
+                'field_name': 'is_active',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'boolean'
+            },
+            {
+                'field_name': 'is_active_exact',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'boolean'
+            },
+            {
+                'field_name': 'name',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'text'
+            },
+            {
+                'field_name': 'name_exact',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'string'
+            },
+            {
+                'field_name': 'post_count',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'slong'
+            },
+            {
+                'field_name': 'post_count_i',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'slong'
+            },
+            {
+                'field_name': 'pub_date',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'date'
+            },
+            {
+                'field_name': 'pub_date_exact',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'date'
+            },
+            {
+                'field_name': 'sites',
+                'indexed': 'true',
+                'multi_valued': 'true',
+                'stored': 'true',
+                'type': 'text'
+            },
+            {
+                'field_name': 'sites_exact',
+                'indexed': 'true',
+                'multi_valued': 'true',
+                'stored': 'true',
+                'type': 'string'
+            },
+            {
+                'field_name': 'text',
+                'indexed': 'true',
+                'multi_valued': 'false',
+                'stored': 'true',
+                'type': 'text'
             }
         ])
     
     def test_verify_type(self):
-        import haystack
-        haystack.site.unregister(MockModel)
-        haystack.site.register(MockModel, SolrMaintainTypeMockSearchIndex)
-        self.sb.update(self.smtmmi, self.sample_objs)
+        old_ui = connections['default'].get_unified_index()
+        ui = UnifiedIndex()
+        smtmmi = SolrMaintainTypeMockSearchIndex()
+        ui.build(indexes=[smtmmi])
+        connections['default']._index = ui
+        sb = connections['default'].get_backend()
+        sb.update(smtmmi, self.sample_objs)
         
-        self.assertEqual(self.sb.search('*:*')['hits'], 3)
-        self.assertEqual([result.month for result in self.sb.search('*:*')['results']], [u'02', u'02', u'02'])
+        self.assertEqual(sb.search('*:*')['hits'], 3)
+        self.assertEqual([result.month for result in sb.search('*:*')['results']], [u'02', u'02', u'02'])
+        connections['default']._index = old_ui
 
 
 class CaptureHandler(logging.Handler):
@@ -470,18 +508,20 @@ class FailedSolrSearchBackendTestCase(TestCase):
         # Stow.
         # Point the backend at a URL that doesn't exist so we can watch the
         # sparks fly.
-        old_solr_url = settings.HAYSTACK_SOLR_URL
-        settings.HAYSTACK_SOLR_URL = "%s/foo/" % settings.HAYSTACK_SOLR_URL
+        old_solr_url = settings.HAYSTACK_CONNECTIONS['default']['URL']
+        settings.HAYSTACK_CONNECTIONS['default']['URL'] = "%s/foo/" % old_solr_url
         cap = CaptureHandler()
         logging.getLogger('haystack').addHandler(cap)
         import haystack
         logging.getLogger('haystack').removeHandler(haystack.stream)
         
         # Setup the rest of the bits.
-        site = SearchSite()
-        site.register(MockModel, SolrMockSearchIndex)
-        sb = SearchBackend(site=site)
-        smmi = SolrMockSearchIndex(MockModel, backend=sb)
+        old_ui = connections['default'].get_unified_index()
+        ui = UnifiedIndex()
+        smmi = SolrMockSearchIndex()
+        ui.build(indexes=[smmi])
+        connections['default']._index = ui
+        sb = connections['default'].get_backend()
         
         # Prior to the addition of the try/except bits, these would all fail miserably.
         self.assertEqual(len(CaptureHandler.logs_seen), 0)
@@ -499,7 +539,8 @@ class FailedSolrSearchBackendTestCase(TestCase):
         self.assertEqual(len(CaptureHandler.logs_seen), 6)
         
         # Restore.
-        settings.HAYSTACK_SOLR_URL = old_solr_url
+        settings.HAYSTACK_CONNECTIONS['default']['URL'] = old_solr_url
+        connections['default']._index = old_ui
         logging.getLogger('haystack').removeHandler(cap)
         logging.getLogger('haystack').addHandler(haystack.stream)
 
@@ -513,16 +554,21 @@ class LiveSolrSearchQueryTestCase(TestCase):
         # Wipe it clean.
         clear_solr_index()
         
-        site = SearchSite()
-        site.register(MockModel, SolrMockSearchIndex)
-        sb = SearchBackend(site=site)
-        smmi = SolrMockSearchIndex(MockModel, backend=sb)
-        
-        self.sq = SearchQuery(backend=sb)
+        # Stow.
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrMockSearchIndex()
+        self.ui.build(indexes=[self.smmi])
+        connections['default']._index = self.ui
+        self.sb = connections['default'].get_backend()
+        self.sq = connections['default'].get_query()
         
         # Force indexing of the content.
-        mockmodel_index = site.get_index(MockModel)
-        mockmodel_index.update()
+        self.smmi.update()
+    
+    def tearDown(self):
+        connections['default']._index = self.old_ui
+        super(LiveSolrSearchQueryTestCase, self).tearDown()
     
     def test_get_spelling(self):
         self.sq.add_filter(SQ(content='Indexy'))
@@ -531,33 +577,32 @@ class LiveSolrSearchQueryTestCase(TestCase):
     
     def test_log_query(self):
         from django.conf import settings
-        from haystack import backends
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         
         # Stow.
         old_debug = settings.DEBUG
         settings.DEBUG = False
         
         len(self.sq.get_results())
-        self.assertEqual(len(backends.queries), 0)
+        self.assertEqual(len(connections['default'].queries), 0)
         
         settings.DEBUG = True
         # Redefine it to clear out the cached results.
-        self.sq = SearchQuery(backend=SearchBackend())
+        self.sq = connections['default'].query()
         self.sq.add_filter(SQ(name='bar'))
         len(self.sq.get_results())
-        self.assertEqual(len(backends.queries), 1)
-        self.assertEqual(backends.queries[0]['query_string'], 'name:bar')
+        self.assertEqual(len(connections['default'].queries), 1)
+        self.assertEqual(connections['default'].queries[0]['query_string'], 'name:bar')
         
         # And again, for good measure.
-        self.sq = SearchQuery(backend=SearchBackend())
+        self.sq = connections['default'].query()
         self.sq.add_filter(SQ(name='bar'))
         self.sq.add_filter(SQ(text='moof'))
         len(self.sq.get_results())
-        self.assertEqual(len(backends.queries), 2)
-        self.assertEqual(backends.queries[0]['query_string'], 'name:bar')
-        self.assertEqual(backends.queries[1]['query_string'], u'(name:bar AND text:moof)')
+        self.assertEqual(len(connections['default'].queries), 2)
+        self.assertEqual(connections['default'].queries[0]['query_string'], 'name:bar')
+        self.assertEqual(connections['default'].queries[1]['query_string'], u'(name:bar AND text:moof)')
         
         # Restore.
         settings.DEBUG = old_debug
@@ -573,17 +618,14 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
     def setUp(self):
         super(LiveSolrSearchQuerySetTestCase, self).setUp()
         
-        # With the models registered, you get the proper bits.
-        import haystack
-        from haystack.sites import SearchSite
-        
         # Stow.
         self.old_debug = settings.DEBUG
         settings.DEBUG = True
-        self.old_site = haystack.site
-        test_site = SearchSite()
-        test_site.register(MockModel, SolrMockModelSearchIndex)
-        haystack.site = test_site
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrMockSearchIndex()
+        self.ui.build(indexes=[self.smmi])
+        connections['default']._index = self.ui
         
         self.sqs = SearchQuerySet()
         self.rsqs = RelatedSearchQuerySet()
@@ -599,91 +641,89 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
             clear_solr_index()
             
             # Force indexing of the content.
-            mockmodel_index = test_site.get_index(MockModel)
-            mockmodel_index.update()
+            self.smmi.update()
     
     def tearDown(self):
         # Restore.
-        import haystack
-        haystack.site = self.old_site
+        connections['default']._index = self.old_ui
         settings.DEBUG = self.old_debug
         super(LiveSolrSearchQuerySetTestCase, self).tearDown()
     
     def test_load_all(self):
         sqs = self.sqs.load_all()
-        self.assert_(isinstance(sqs, SearchQuerySet))
-        self.assert_(len(sqs) > 0)
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(len(sqs) > 0)
         self.assertEqual(sqs[0].object.foo, u"Registering indexes in Haystack is very similar to registering models and ``ModelAdmin`` classes in the `Django admin site`_.  If you want to override the default indexing behavior for your model you can specify your own ``SearchIndex`` class.  This is useful for ensuring that future-dated or non-live content is not indexed and searchable. Our ``Note`` model has a ``pub_date`` field, so let's update our code to include our own ``SearchIndex`` to exclude indexing future-dated notes:")
     
     def test_iter(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         sqs = self.sqs.all()
         results = [int(result.pk) for result in sqs]
         self.assertEqual(results, range(1, 24))
-        self.assertEqual(len(backends.queries), 3)
+        self.assertEqual(len(connections['default'].queries), 3)
     
     def test_slice(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.sqs.all()
         self.assertEqual([int(result.pk) for result in results[1:11]], [2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-        self.assertEqual(len(backends.queries), 1)
+        self.assertEqual(len(connections['default'].queries), 1)
         
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.sqs.all()
         self.assertEqual(int(results[21].pk), 22)
-        self.assertEqual(len(backends.queries), 1)
+        self.assertEqual(len(connections['default'].queries), 1)
     
     def test_count(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         sqs = self.sqs.all()
         self.assertEqual(sqs.count(), 23)
         self.assertEqual(sqs.count(), 23)
         self.assertEqual(len(sqs), 23)
         self.assertEqual(sqs.count(), 23)
         # Should only execute one query to count the length of the result set.
-        self.assertEqual(len(backends.queries), 1)
+        self.assertEqual(len(connections['default'].queries), 1)
     
     def test_manual_iter(self):
         results = self.sqs.all()
         
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = [int(result.pk) for result in results._manual_iter()]
         self.assertEqual(results, range(1, 24))
-        self.assertEqual(len(backends.queries), 3)
+        self.assertEqual(len(connections['default'].queries), 3)
     
     def test_fill_cache(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.sqs.all()
         self.assertEqual(len(results._result_cache), 0)
-        self.assertEqual(len(backends.queries), 0)
+        self.assertEqual(len(connections['default'].queries), 0)
         results._fill_cache(0, 10)
         self.assertEqual(len([result for result in results._result_cache if result is not None]), 10)
-        self.assertEqual(len(backends.queries), 1)
+        self.assertEqual(len(connections['default'].queries), 1)
         results._fill_cache(10, 20)
         self.assertEqual(len([result for result in results._result_cache if result is not None]), 20)
-        self.assertEqual(len(backends.queries), 2)
+        self.assertEqual(len(connections['default'].queries), 2)
     
     def test_cache_is_full(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         self.assertEqual(self.sqs._cache_is_full(), False)
         results = self.sqs.all()
         fire_the_iterator_and_fill_cache = [result for result in results]
         self.assertEqual(results._cache_is_full(), True)
-        self.assertEqual(len(backends.queries), 3)
+        self.assertEqual(len(connections['default'].queries), 3)
     
     def test___and__(self):
         sqs1 = self.sqs.filter(content='foo')
         sqs2 = self.sqs.filter(content='bar')
         sqs = sqs1 & sqs2
         
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs.query.query_filter), 2)
         self.assertEqual(sqs.query.build_query(), u'(foo AND bar)')
         
@@ -692,7 +732,7 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         sqs4 = self.sqs.filter(content='bar')
         sqs = sqs3 & sqs4
         
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs.query.query_filter), 3)
         self.assertEqual(sqs.query.build_query(), u'(NOT (title:moof) AND (foo OR baz) AND bar)')
     
@@ -701,7 +741,7 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         sqs2 = self.sqs.filter(content='bar')
         sqs = sqs1 | sqs2
         
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs.query.query_filter), 2)
         self.assertEqual(sqs.query.build_query(), u'(foo OR bar)')
         
@@ -710,7 +750,7 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         sqs4 = self.sqs.filter(content='bar').models(MockModel)
         sqs = sqs3 | sqs4
         
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs.query.query_filter), 2)
         self.assertEqual(sqs.query.build_query(), u'((NOT (title:moof) AND (foo OR baz)) OR bar)')
     
@@ -718,7 +758,7 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         # Ensure bits in exact matches get escaped properly as well.
         # This will break horrifically if escaping isn't working.
         sqs = self.sqs.auto_query('"pants:rule"')
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(repr(sqs.query.query_filter), '<SQ: AND content__exact=pants\\:rule>')
         self.assertEqual(sqs.query.build_query(), u'pants\\:rule')
         self.assertEqual(len(sqs), 0)
@@ -754,8 +794,8 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
     
     def test_related_load_all(self):
         sqs = self.rsqs.load_all()
-        self.assert_(isinstance(sqs, SearchQuerySet))
-        self.assert_(len(sqs) > 0)
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(len(sqs) > 0)
         self.assertEqual(sqs[0].object.foo, u"Registering indexes in Haystack is very similar to registering models and ``ModelAdmin`` classes in the `Django admin site`_.  If you want to override the default indexing behavior for your model you can specify your own ``SearchIndex`` class.  This is useful for ensuring that future-dated or non-live content is not indexed and searchable. Our ``Note`` model has a ``pub_date`` field, so let's update our code to include our own ``SearchIndex`` to exclude indexing future-dated notes:")
     
     def test_related_load_all_queryset(self):
@@ -763,73 +803,73 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         self.assertEqual(len(sqs._load_all_querysets), 0)
         
         sqs = sqs.load_all_queryset(MockModel, MockModel.objects.filter(id__gt=1))
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs._load_all_querysets), 1)
         self.assertEqual([obj.object.id for obj in sqs], range(2, 24))
         
         sqs = sqs.load_all_queryset(MockModel, MockModel.objects.filter(id__gt=10))
-        self.assert_(isinstance(sqs, SearchQuerySet))
+        self.assertTrue(isinstance(sqs, SearchQuerySet))
         self.assertEqual(len(sqs._load_all_querysets), 1)
         self.assertEqual([obj.object.id for obj in sqs], range(11, 24))
         self.assertEqual([obj.object.id for obj in sqs[10:20]], [21, 22, 23])
     
     def test_related_iter(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         sqs = self.rsqs.all()
         results = [int(result.pk) for result in sqs]
         self.assertEqual(results, range(1, 24))
-        self.assertEqual(len(backends.queries), 4)
+        self.assertEqual(len(connections['default'].queries), 4)
     
     def test_related_slice(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.rsqs.all()
         self.assertEqual([int(result.pk) for result in results[1:11]], [2, 3, 4, 5, 6, 7, 8, 9, 10, 11])
-        self.assertEqual(len(backends.queries), 3)
+        self.assertEqual(len(connections['default'].queries), 3)
         
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.rsqs.all()
         self.assertEqual(int(results[21].pk), 22)
-        self.assertEqual(len(backends.queries), 4)
+        self.assertEqual(len(connections['default'].queries), 4)
         
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.rsqs.all()
         self.assertEqual([int(result.pk) for result in results[20:30]], [21, 22, 23])
-        self.assertEqual(len(backends.queries), 4)
+        self.assertEqual(len(connections['default'].queries), 4)
     
     def test_related_manual_iter(self):
         results = self.rsqs.all()
         
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = [int(result.pk) for result in results._manual_iter()]
         self.assertEqual(results, range(1, 24))
-        self.assertEqual(len(backends.queries), 4)
+        self.assertEqual(len(connections['default'].queries), 4)
     
     def test_related_fill_cache(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         results = self.rsqs.all()
         self.assertEqual(len(results._result_cache), 0)
-        self.assertEqual(len(backends.queries), 0)
+        self.assertEqual(len(connections['default'].queries), 0)
         results._fill_cache(0, 10)
         self.assertEqual(len([result for result in results._result_cache if result is not None]), 10)
-        self.assertEqual(len(backends.queries), 1)
+        self.assertEqual(len(connections['default'].queries), 1)
         results._fill_cache(10, 20)
         self.assertEqual(len([result for result in results._result_cache if result is not None]), 20)
-        self.assertEqual(len(backends.queries), 2)
+        self.assertEqual(len(connections['default'].queries), 2)
     
     def test_related_cache_is_full(self):
-        backends.reset_search_queries()
-        self.assertEqual(len(backends.queries), 0)
+        reset_search_queries()
+        self.assertEqual(len(connections['default'].queries), 0)
         self.assertEqual(self.rsqs._cache_is_full(), False)
         results = self.rsqs.all()
         fire_the_iterator_and_fill_cache = [result for result in results]
         self.assertEqual(results._cache_is_full(), True)
-        self.assertEqual(len(backends.queries), 5)
+        self.assertEqual(len(connections['default'].queries), 5)
     
     def test_quotes_regression(self):
         sqs = self.sqs.auto_query("44°48'40''N 20°28'32''E")
@@ -877,6 +917,19 @@ class LiveSolrSearchQuerySetTestCase(TestCase):
         sqs = self.sqs.auto_query('mel "blazing saddles" "brooks')
         self.assertEqual(sqs.query.build_query(), u'("blazing saddles" AND mel AND \\"brooks)')
         self.assertEqual(sqs.count(), 0)
+    
+    def test_result_class(self):
+        # Assert that we're defaulting to ``SearchResult``.
+        sqs = self.sqs.all()
+        self.assertTrue(isinstance(sqs[0], SearchResult))
+        
+        # Custom class.
+        sqs = self.sqs.result_class(MockSearchResult).all()
+        self.assertTrue(isinstance(sqs[0], MockSearchResult))
+        
+        # Reset to default.
+        sqs = self.sqs.result_class(None).all()
+        self.assertTrue(isinstance(sqs[0], SearchResult))
 
 
 class LiveSolrMoreLikeThisTestCase(TestCase):
@@ -888,27 +941,22 @@ class LiveSolrMoreLikeThisTestCase(TestCase):
         # Wipe it clean.
         clear_solr_index()
         
-        # With the models registered, you get the proper bits.
-        import haystack
-        from haystack.sites import SearchSite
-        
-        # Stow.
-        self.old_site = haystack.site
-        test_site = SearchSite()
-        test_site.register(MockModel, SolrMockModelSearchIndex)
-        test_site.register(AnotherMockModel, SolrAnotherMockModelSearchIndex)
-        haystack.site = test_site
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrMockModelSearchIndex()
+        self.sammi = SolrAnotherMockModelSearchIndex()
+        self.ui.build(indexes=[self.smmi, self.sammi])
+        connections['default']._index = self.ui
         
         self.sqs = SearchQuerySet()
-
-        test_site.get_index(MockModel).update()
-        test_site.get_index(AnotherMockModel).update()
+        
+        self.smmi.update()
+        self.sammi.update()
 
     
     def tearDown(self):
         # Restore.
-        import haystack
-        haystack.site = self.old_site
+        connections['default']._index = self.old_ui
         super(LiveSolrMoreLikeThisTestCase, self).tearDown()
     
     def test_more_like_this(self):
@@ -935,6 +983,65 @@ class LiveSolrMoreLikeThisTestCase(TestCase):
             self.assertEqual(deferred.count(), 0)
             self.assertEqual([result.pk for result in deferred], [])
             self.assertEqual(len([result.pk for result in deferred]), 0)
+        
+        # Ensure that swapping the ``result_class`` works.
+        self.assertTrue(isinstance(self.sqs.result_class(MockSearchResult).more_like_this(MockModel.objects.get(pk=1))[0], MockSearchResult))
+
+
+
+class LiveSolrAutocompleteTestCase(TestCase):
+    fixtures = ['bulk_data.json']
+    
+    def setUp(self):
+        super(LiveSolrAutocompleteTestCase, self).setUp()
+        
+        # Wipe it clean.
+        clear_solr_index()
+        
+        # Stow.
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrAutocompleteMockModelSearchIndex()
+        self.ui.build(indexes=[self.smmi])
+        connections['default']._index = self.ui
+        
+        self.sqs = SearchQuerySet()
+        
+        self.smmi.update()
+    
+    def tearDown(self):
+        # Restore.
+        connections['default']._index = self.old_ui
+        super(LiveSolrAutocompleteTestCase, self).tearDown()
+    
+    def test_autocomplete(self):
+        autocomplete = self.sqs.autocomplete(text_auto='mod')
+        self.assertEqual(autocomplete.count(), 5)
+        self.assertEqual([result.pk for result in autocomplete], ['1', '12', '6', '7', '14'])
+        self.assertTrue('mod' in autocomplete[0].text.lower())
+        self.assertTrue('mod' in autocomplete[1].text.lower())
+        self.assertTrue('mod' in autocomplete[2].text.lower())
+        self.assertTrue('mod' in autocomplete[3].text.lower())
+        self.assertTrue('mod' in autocomplete[4].text.lower())
+        self.assertEqual(len([result.pk for result in autocomplete]), 5)
+        
+        # Test multiple words.
+        autocomplete_2 = self.sqs.autocomplete(text_auto='your mod')
+        self.assertEqual(autocomplete_2.count(), 3)
+        self.assertEqual([result.pk for result in autocomplete_2], ['1', '14', '6'])
+        self.assertTrue('your' in autocomplete_2[0].text.lower())
+        self.assertTrue('mod' in autocomplete_2[0].text.lower())
+        self.assertTrue('your' in autocomplete_2[1].text.lower())
+        self.assertTrue('mod' in autocomplete_2[1].text.lower())
+        self.assertTrue('your' in autocomplete_2[2].text.lower())
+        self.assertTrue('mod' in autocomplete_2[2].text.lower())
+        self.assertEqual(len([result.pk for result in autocomplete_2]), 3)
+        
+        # Test multiple fields.
+        autocomplete_3 = self.sqs.autocomplete(text_auto='Django', name_auto='dan')
+        self.assertEqual(autocomplete_3.count(), 4)
+        self.assertEqual([result.pk for result in autocomplete_3], ['12', '1', '14', '22'])
+        self.assertEqual(len([result.pk for result in autocomplete_3]), 4)
 
 
 class LiveSolrRoundTripTestCase(TestCase):
@@ -944,29 +1051,24 @@ class LiveSolrRoundTripTestCase(TestCase):
         # Wipe it clean.
         clear_solr_index()
         
-        # With the models registered, you get the proper bits.
-        import haystack
-        from haystack.sites import SearchSite
-        
         # Stow.
-        self.old_site = haystack.site
-        test_site = SearchSite()
-        test_site.register(MockModel, SolrRoundTripSearchIndex)
-        haystack.site = test_site
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.srtsi = SolrRoundTripSearchIndex()
+        self.ui.build(indexes=[self.srtsi])
+        connections['default']._index = self.ui
+        self.sb = connections['default'].get_backend()
         
         self.sqs = SearchQuerySet()
         
         # Fake indexing.
-        sb = SearchBackend(site=test_site)
-        srtsi = SolrRoundTripSearchIndex(MockModel)
         mock = MockModel()
         mock.id = 1
-        sb.update(srtsi, [mock])
+        self.sb.update(self.srtsi, [mock])
     
     def tearDown(self):
         # Restore.
-        import haystack
-        haystack.site = self.old_site
+        connections['default']._index = self.old_ui
         super(LiveSolrRoundTripTestCase, self).tearDown()
     
     def test_round_trip(self):
@@ -983,6 +1085,7 @@ class LiveSolrRoundTripTestCase(TestCase):
         self.assertEqual(result.is_active, True)
         self.assertEqual(result.post_count, 25)
         self.assertEqual(result.average_rating, 3.6)
+        self.assertEqual(result.price, u'24.99')
         self.assertEqual(result.pub_date, datetime.date(2009, 11, 21))
         self.assertEqual(result.created, datetime.datetime(2009, 11, 21, 21, 31, 00))
         self.assertEqual(result.tags, ['staff', 'outdoor', 'activist', 'scientist'])
@@ -999,26 +1102,22 @@ if test_pickling:
             # Wipe it clean.
             clear_solr_index()
             
-            # With the models registered, you get the proper bits.
-            import haystack
-            from haystack.sites import SearchSite
-            
             # Stow.
-            self.old_site = haystack.site
-            test_site = SearchSite()
-            test_site.register(MockModel, SolrMockModelSearchIndex)
-            test_site.register(AnotherMockModel, SolrAnotherMockModelSearchIndex)
-            haystack.site = test_site
+            self.old_ui = connections['default'].get_unified_index()
+            self.ui = UnifiedIndex()
+            self.smmi = SolrMockModelSearchIndex()
+            self.sammi = SolrAnotherMockModelSearchIndex()
+            self.ui.build(indexes=[self.smmi, self.sammi])
+            connections['default']._index = self.ui
             
             self.sqs = SearchQuerySet()
             
-            test_site.get_index(MockModel).update()
-            test_site.get_index(AnotherMockModel).update()
+            self.smmi.update()
+            self.sammi.update()
         
         def tearDown(self):
             # Restore.
-            import haystack
-            haystack.site = self.old_site
+            connections['default']._index = self.old_ui
             super(LiveSolrPickleTestCase, self).tearDown()
         
         def test_pickling(self):
@@ -1039,18 +1138,17 @@ class SolrBoostBackendTestCase(TestCase):
         super(SolrBoostBackendTestCase, self).setUp()
         
         # Wipe it clean.
-        self.raw_solr = pysolr.Solr(settings.HAYSTACK_SOLR_URL)
+        self.raw_solr = pysolr.Solr(settings.HAYSTACK_CONNECTIONS['default']['URL'])
         clear_solr_index()
         
-        self.site = SearchSite()
-        self.sb = SearchBackend(site=self.site)
-        self.smmi = SolrBoostMockSearchIndex(AFourthMockModel, backend=self.sb)
-        self.site.register(AFourthMockModel, SolrBoostMockSearchIndex)
-        
         # Stow.
-        import haystack
-        self.old_site = haystack.site
-        haystack.site = self.site
+        self.old_ui = connections['default'].get_unified_index()
+        self.ui = UnifiedIndex()
+        self.smmi = SolrBoostMockSearchIndex()
+        self.ui.build(indexes=[self.smmi])
+        connections['default']._index = self.ui
+        self.sb = connections['default'].get_backend()
+        
         self.sample_objs = []
         
         for i in xrange(1, 5):
@@ -1068,8 +1166,7 @@ class SolrBoostBackendTestCase(TestCase):
             self.sample_objs.append(mock)
     
     def tearDown(self):
-        import haystack
-        haystack.site = self.old_site
+        connections['default']._index = self.old_ui
         super(SolrBoostBackendTestCase, self).tearDown()
     
     def test_boost(self):

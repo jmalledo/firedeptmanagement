@@ -4,7 +4,7 @@
 ``SearchQuerySet`` API
 ======================
 
-.. class:: SearchQuerySet(site=None, query=None)
+.. class:: SearchQuerySet(using=None, query=None)
 
 The ``SearchQuerySet`` class is designed to make performing a search and
 iterating over its results easy and consistent. For those familiar with Django's
@@ -236,6 +236,20 @@ Example::
 
     SearchQuerySet().filter(content='foo').models(BlogEntry, Comment)
 
+``result_class``
+~~~~~~~~~~~~~~~~
+
+.. method:: SearchQuerySet.result_class(self, klass)
+
+Allows specifying a different class to use for results.
+
+Overrides any previous usages. If ``None`` is provided, Haystack will
+revert back to the default ``SearchResult`` object.
+
+Example::
+
+    SearchQuerySet().result_class(CustomResult)
+
 ``boost``
 ~~~~~~~~~
 
@@ -418,6 +432,18 @@ Example::
 
 This method is somewhat naive but works well enough for simple, common cases.
 
+``autocomplete``
+~~~~~~~~~~~~~~~~
+
+A shortcut method to perform an autocomplete search.
+
+Must be run against fields that are either ``NgramField`` or
+``EdgeNgramField``.
+
+Example::
+
+    SearchQuerySet().autocomplete(title_autocomplete='gol')
+
 ``more_like_this``
 ~~~~~~~~~~~~~~~~~~
 
@@ -444,6 +470,21 @@ Example::
     mlt = SearchQuerySet().filter(public=True).exclude(pub_date__lte=datetime.date(2009, 7, 21)).more_like_this(entry)
     mlt.count() # 2
     mlt[0].object.title # "Haystack Beta 1 Released"
+
+``using``
+~~~~~~~~~
+
+.. method:: SearchQuerySet.using(self, connection_name)
+
+Allows switching which connection the ``SearchQuerySet`` uses to search in.
+
+Example::
+
+    # Let the routers decide which connection to use.
+    sqs = SearchQuerySet().all()
+    
+    # Specify the 'default'.
+    sqs = SearchQuerySet().all().using('default')
 
 
 Methods That Do Not Return A ``SearchQuerySet``
@@ -542,8 +583,8 @@ Example::
 
 Returns the spelling suggestion found by the query.
 
-To work, you must set ``settings.HAYSTACK_INCLUDE_SPELLING`` (see
-:doc:`settings`) to ``True``. Otherwise, ``None`` will be returned.
+To work, you must set ``INCLUDE_SPELLING`` within your connection's
+settings dictionary to ``True``. Otherwise, ``None`` will be returned.
 
 This method causes the query to evaluate and run the search if it hasn't already
 run. Search results will be populated as normal but with an additional spelling

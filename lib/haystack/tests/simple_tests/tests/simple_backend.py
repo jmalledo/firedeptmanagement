@@ -1,15 +1,8 @@
 from datetime import date
 from django.test import TestCase
-from haystack import indexes, sites, backends
-from haystack.backends.simple_backend import SearchBackend
-from haystack.sites import SearchSite
+from haystack import connections, connection_router
 from core.models import MockModel
-
-
-class SimpleMockSearchIndex(indexes.SearchIndex):
-    text = indexes.CharField(document=True, use_template=True)
-    name = indexes.CharField(model_attr='author')
-    pub_date = indexes.DateField(model_attr='pub_date')
+from core.tests.mocks import MockSearchResult
 
 
 class SimpleSearchBackendTestCase(TestCase):
@@ -18,11 +11,8 @@ class SimpleSearchBackendTestCase(TestCase):
     def setUp(self):
         super(SimpleSearchBackendTestCase, self).setUp()
         
-        self.site = SearchSite()
-        self.backend = SearchBackend(site=self.site)
-        self.index = SimpleMockSearchIndex(MockModel, backend=self.backend)
-        self.site.register(MockModel, SimpleMockSearchIndex)
-        
+        self.backend = connections['default'].get_backend()
+        self.index = connections['default'].get_unified_index().get_index(MockModel)
         self.sample_objs = MockModel.objects.all()
     
     def test_update(self):
@@ -73,9 +63,12 @@ class SimpleSearchBackendTestCase(TestCase):
         # Note that only textual-fields are supported.
         self.assertEqual(self.backend.search(u'2009-06-18')['hits'], 0)
         
+        # Ensure that swapping the ``result_class`` works.
+        self.assertTrue(isinstance(self.backend.search(u'index document', result_class=MockSearchResult)['results'][0], MockSearchResult))
+        
     def test_more_like_this(self):
         self.backend.update(self.index, self.sample_objs)
         self.assertEqual(self.backend.search(u'*')['hits'], 23)
         
-        # Unsupported by 'dummy'. Should see empty results.
+        # Unsupported by 'simple'. Should see empty results.
         self.assertEqual(self.backend.more_like_this(self.sample_objs[0])['hits'], 0)

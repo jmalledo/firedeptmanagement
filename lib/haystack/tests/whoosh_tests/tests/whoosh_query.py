@@ -1,9 +1,11 @@
 import datetime
 import os
+import shutil
 from django.conf import settings
 from django.test import TestCase
+from haystack import connections
+from haystack.models import SearchResult
 from haystack.query import SQ
-from haystack.backends.whoosh_backend import SearchBackend, SearchQuery
 from core.models import MockModel, AnotherMockModel
 
 
@@ -13,21 +15,16 @@ class WhooshSearchQueryTestCase(TestCase):
         
         # Stow.
         temp_path = os.path.join('tmp', 'test_whoosh_query')
-        self.old_whoosh_path = getattr(settings, 'HAYSTACK_WHOOSH_PATH', temp_path)
-        settings.HAYSTACK_WHOOSH_PATH = temp_path
+        self.old_whoosh_path = settings.HAYSTACK_CONNECTIONS['default']['PATH']
+        settings.HAYSTACK_CONNECTIONS['default']['PATH'] = temp_path
         
-        self.sq = SearchQuery(backend=SearchBackend())
+        self.sq = connections['default'].get_query()
     
     def tearDown(self):
-        if os.path.exists(settings.HAYSTACK_WHOOSH_PATH):
-            index_files = os.listdir(settings.HAYSTACK_WHOOSH_PATH)
+        if os.path.exists(settings.HAYSTACK_CONNECTIONS['default']['PATH']):
+            shutil.rmtree(settings.HAYSTACK_CONNECTIONS['default']['PATH'])
         
-            for index_file in index_files:
-                os.remove(os.path.join(settings.HAYSTACK_WHOOSH_PATH, index_file))
-        
-            os.removedirs(settings.HAYSTACK_WHOOSH_PATH)
-        
-        settings.HAYSTACK_WHOOSH_PATH = self.old_whoosh_path
+        settings.HAYSTACK_CONNECTIONS['default']['PATH'] = self.old_whoosh_path
         super(WhooshSearchQueryTestCase, self).tearDown()
     
     def test_build_query_all(self):
@@ -73,7 +70,7 @@ class WhooshSearchQueryTestCase(TestCase):
         self.sq.add_filter(SQ(title__gte='B'))
         self.sq.add_filter(SQ(id__in=[1, 2, 3]))
         self.sq.add_filter(SQ(rating__range=[3, 5]))
-        self.assertEqual(self.sq.build_query(), u'(why AND pub_date:[TO 20090210T015900] AND author:{daniel TO} AND created:{TO 20090212T121300} AND title:[B TO] AND (id:"1" OR id:"2" OR id:"3") AND rating:[3 TO 5])')
+        self.assertEqual(self.sq.build_query(), u'(why AND pub_date:[to 20090210015900] AND author:{daniel to} AND created:{to 20090212121300} AND title:[B to] AND (id:"1" OR id:"2" OR id:"3") AND rating:[3 to 5])')
     
     def test_build_query_in_filter_multiple_words(self):
         self.sq.add_filter(SQ(content='why'))
@@ -83,7 +80,12 @@ class WhooshSearchQueryTestCase(TestCase):
     def test_build_query_in_filter_datetime(self):
         self.sq.add_filter(SQ(content='why'))
         self.sq.add_filter(SQ(pub_date__in=[datetime.datetime(2009, 7, 6, 1, 56, 21)]))
-        self.assertEqual(self.sq.build_query(), u'(why AND (pub_date:"20090706T015621"))')
+        self.assertEqual(self.sq.build_query(), u'(why AND (pub_date:"20090706015621"))')
+    
+    def test_build_query_in_with_set(self):
+        self.sq.add_filter(SQ(content='why'))
+        self.sq.add_filter(SQ(title__in=set(["A Famous Paper", "An Infamous Article"])))
+        self.assertEqual(self.sq.build_query(), u'(why AND (title:"A Famous Paper" OR title:"An Infamous Article"))')
     
     def test_build_query_wildcard_filter_types(self):
         self.sq.add_filter(SQ(content='why'))
@@ -106,8 +108,28 @@ class WhooshSearchQueryTestCase(TestCase):
     
     def test_build_query_with_datetime(self):
         self.sq.add_filter(SQ(pub_date=datetime.datetime(2009, 5, 9, 16, 20)))
-        self.assertEqual(self.sq.build_query(), u'pub_date:20090509T162000')
+        self.assertEqual(self.sq.build_query(), u'pub_date:20090509162000')
     
     def test_build_query_with_sequence_and_filter_not_in(self):
         self.sq.add_filter(SQ(id__exact=[1, 2, 3]))
         self.assertEqual(self.sq.build_query(), u'id:1,2,3')
+    
+    def test_set_result_class(self):
+        # Assert that we're defaulting to ``SearchResult``.
+        self.assertTrue(issubclass(self.sq.result_class, SearchResult))
+        
+        # Custom class.
+        class IttyBittyResult(object):
+            pass
+        
+        self.sq.set_result_class(IttyBittyResult)
+        self.assertTrue(issubclass(self.sq.result_class, IttyBittyResult))
+        
+        # Reset to default.
+        self.sq.set_result_class(None)
+        self.assertTrue(issubclass(self.sq.result_class, SearchResult))
+    
+    def test_in_filter_values_list(self):
+        self.sq.add_filter(SQ(content='why'))
+        self.sq.add_filter(SQ(title__in=MockModel.objects.values_list('id', flat=True)))
+        self.assertEqual(self.sq.build_query(), u'(why AND (title:"1" OR title:"2" OR title:"3"))')

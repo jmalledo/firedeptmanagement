@@ -13,16 +13,16 @@ Solr is Java but comes in a pre=packaged form that requires very little other
 than the JRE and Jetty. It's very performant and has an advanced featureset.
 Haystack requires Solr 1.3+. Installation is relatively simple::
 
-    curl -O http://apache.mirrors.tds.net/lucene/solr/1.3.0/apache-solr-1.3.0.tgz
-    tar xvzf apache-solr-1.3.0.tgz
-    cd apache-solr-1.3.0
+    curl -O http://apache.mirrors.tds.net/lucene/solr/1.4.1/apache-solr-1.4.1.tgz
+    tar xvzf apache-solr-1.4.1.tgz
+    cd apache-solr-1.4.1
     cd example
     java -jar start.jar
 
 You'll need to revise your schema. You can generate this from your application
 (once Haystack is installed and setup) by running 
 ``./manage.py build_solr_schema``. Take the output from that command and place
-it in ``apache-solr-1.3.0/example/solr/conf/schema.xml``. Then restart Solr.
+it in ``apache-solr-1.4.1/example/solr/conf/schema.xml``. Then restart Solr.
 
 You'll also need a Solr binding, ``pysolr``. The official ``pysolr`` package,
 distributed via PyPI, is the best version to use (2.0.13+). Place ``pysolr.py``
@@ -49,7 +49,24 @@ Spelling Suggestions
 --------------------
 
 To enable the spelling suggestion functionality in Haystack, you'll need to
-enable the ``SpellCheckComponent``. Add the following line to your
+enable the ``SpellCheckComponent``.
+
+The first thing to do is create a special field on your ``SearchIndex`` class
+that mirrors the ``text`` field, but has ``indexed=False`` on it. This disables
+the post-processing that Solr does, which can mess up your suggestions.
+Something like the following is suggested::
+
+    class MySearchIndex(indexes.SearchIndex):
+        text = indexes.CharField(document=True, use_template=True)
+        # ... normal fields then...
+        suggestions = indexes.CharField()
+        
+        def prepare(self, obj):
+            prepared_data = super(NoteIndex, self).prepare(object)
+            prepared_data['suggestions'] = prepared_data['text']
+            return prepared_data
+
+Then, you enable it in Solr by adding the following line to your
 ``solrconfig.xml`` file within the ``config`` tag::
 
     <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
@@ -58,7 +75,7 @@ enable the ``SpellCheckComponent``. Add the following line to your
 
         <lst name="spellchecker">
           <str name="name">default</str>
-          <str name="field">text</str>
+          <str name="field">suggestions</str>
           <str name="spellcheckIndexDir">./spellchecker1</str>
           <str name="buildOnCommit">true</str>
         </lst>
@@ -76,10 +93,9 @@ Then change your default handler from::
         </arr>
     </requestHandler>
 
-Be warned that the ``<str name="field">text</str>`` portion will be specific to
+Be warned that the ``<str name="field">suggestions</str>`` portion will be specific to
 your ``SearchIndex`` classes (in this case, assuming the main field is called
-``text``). This should be the same as the ``<defaultSearchField>`` in your
-``schema.xml``.
+``text``).
 
 
 Whoosh

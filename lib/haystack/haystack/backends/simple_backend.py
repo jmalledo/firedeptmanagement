@@ -3,11 +3,9 @@ A very basic, ORM-based backend for simple search during tests.
 """
 from django.conf import settings
 from django.db.models import Q
-from haystack.backends import BaseSearchBackend, BaseSearchQuery, SearchNode, log_query
+from haystack import connections
+from haystack.backends import BaseEngine, BaseSearchBackend, BaseSearchQuery, SearchNode, log_query
 from haystack.models import SearchResult
-
-
-BACKEND_NAME = 'simple'
 
 
 if settings.DEBUG:
@@ -27,7 +25,7 @@ if settings.DEBUG:
     logger.addHandler(ch)
 
 
-class SearchBackend(BaseSearchBackend):
+class SimpleSearchBackend(BaseSearchBackend):
     def update(self, indexer, iterable, commit=True):
         if settings.DEBUG:
             logger.warning('update is not implemented in this backend')
@@ -47,12 +45,15 @@ class SearchBackend(BaseSearchBackend):
     def search(self, query_string, sort_by=None, start_offset=0, end_offset=None,
                fields='', highlight=False, facets=None, date_facets=None, query_facets=None,
                narrow_queries=None, spelling_query=None,
-               limit_to_registered_models=None, **kwargs):
+               limit_to_registered_models=None, result_class=None, **kwargs):
         hits = 0
         results = []
         
+        if result_class is None:
+            result_class = SearchResult
+        
         if query_string:
-            for model in self.site.get_indexed_models():
+            for model in connections[self.connection_alias].get_unified_index().get_indexed_models():
                 if query_string == '*':
                     qs = model.objects.all()
                 else:
@@ -73,7 +74,7 @@ class SearchBackend(BaseSearchBackend):
                 hits += len(qs)
                 
                 for match in qs:
-                    result = SearchResult(match._meta.app_label, match._meta.module_name, match.pk, 0, **match.__dict__)
+                    result = result_class(match._meta.app_label, match._meta.module_name, match.pk, 0, **match.__dict__)
                     # For efficiency.
                     result._model = match.__class__
                     result._object = match
@@ -89,22 +90,14 @@ class SearchBackend(BaseSearchBackend):
     
     def more_like_this(self, model_instance, additional_query_string=None,
                        start_offset=0, end_offset=None,
-                       limit_to_registered_models=None, **kwargs):
+                       limit_to_registered_models=None, result_class=None, **kwargs):
         return {
             'results': [],
             'hits': 0
         }
 
 
-class SearchQuery(BaseSearchQuery):
-    def __init__(self, site=None, backend=None):
-        super(SearchQuery, self).__init__(backend=backend)
-        
-        if backend is not None:
-            self.backend = backend
-        else:
-            self.backend = SearchBackend(site=site)
-    
+class SimpleSearchQuery(BaseSearchQuery):
     def build_query(self):
         if not self.query_filter:
             return '*'
@@ -121,3 +114,8 @@ class SearchQuery(BaseSearchQuery):
                 term_list.append(child[1])
         
         return (' ').join(term_list)
+
+
+class SimpleEngine(BaseEngine):
+    backend = SimpleSearchBackend
+    query = SimpleSearchQuery

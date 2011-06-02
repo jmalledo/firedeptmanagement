@@ -20,9 +20,18 @@ following arguments::
         uncerimoniously wiped out.
     ``--verbosity``:
         Accepted but ignored.
+    ``--using``:
+        If provided, determines which connection should be used. Default is
+        ``default``.
 
 By default, this is an **INTERACTIVE** command and assumes that you do **NOT**
 wish to delete the entire index.
+
+.. warning::
+
+  Depending on the backend you're using, this may simply delete the entire
+  directory, so be sure your ``HAYSTACK_CONNECTIONS[<alias>]['PATH']`` setting is correctly
+  pointed at just the index directory.
 
 
 ``update_index``
@@ -44,6 +53,9 @@ arguments::
     ``--remove``:
         Remove objects from the index that are no longer present in the
         database.
+    ``--workers``:
+        Allows for the use multiple workers to parallelize indexing. Requires
+        ``multiprocessing``.
     ``--verbosity``:
         If provided, dumps out more information about what's being done.
         
@@ -52,13 +64,16 @@ arguments::
             and how many records.
           * ``2`` = Full output, including everything from ``1`` plus output
             on each batch that is indexed, which is useful when debugging.
+    ``--using``:
+        If provided, determines which connection should be used. Default is
+        ``default``.
 
 .. note::
 
     This command *ONLY* updates records in the index. It does *NOT* handle
-    deletions, so you may need to write a separate script that handles deleted
-    models, such as a queue consumer or something that runs through all records
-    and tries to load the model for it. Alternatively, you can use the
+    deletions unless the ``--remove`` flag is provided. You might consider
+    a queue consumer if the memory requirements for ``--remove`` don't
+    fit your needs. Alternatively, you can use the
     ``RealTimeSearchIndex``, which will automatically handle deletions.
     
 
@@ -90,6 +105,9 @@ of the arguments of the following arguments::
             and how many records.
           * ``2`` = Full output, including everything from ``1`` plus output
             on each batch that is indexed, which is useful when debugging.
+    ``--using``:
+        If provided, determines which connection should be used. Default is
+        ``default``.
 
 For when you really, really want a completely rebuilt index.
 
@@ -98,12 +116,19 @@ For when you really, really want a completely rebuilt index.
 =====================
 
 Once all of your ``SearchIndex`` classes are in place, this command can be used
-to generate the XML schema Solr needs to handle the search data. It accepts no
-arguments.
+to generate the XML schema Solr needs to handle the search data. It accepts the
+following arguments::
+
+    ``--filename``:
+        If provided, directs output to a file instead of stdout.
+    ``--using``:
+        If provided, determines which connection should be used. Default is
+        ``default``.
 
 .. warning:
 
-    This command does NOT update the ``schema.xml`` file for you. You have to
+    This command does NOT update the ``schema.xml`` file for you. You either
+    have to specify a ``filename`` flag or have to
     copy-paste (or redirect) the output to the correct file. Haystack has no
     way of knowing where your Solr is setup (or if it's even on the same
     machine), hence the manual step.

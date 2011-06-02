@@ -28,9 +28,12 @@ Included with Haystack are the following field types:
 * ``CharField``
 * ``DateField``
 * ``DateTimeField``
+* ``DecimalField``
+* ``EdgeNgramField``
 * ``FloatField``
 * ``IntegerField``
 * ``MultiValueField``
+* ``NgramField``
 
 And equivalent faceted versions:
 
@@ -38,9 +41,16 @@ And equivalent faceted versions:
 * ``FacetCharField``
 * ``FacetDateField``
 * ``FacetDateTimeField``
+* ``FacetDecimalField``
 * ``FacetFloatField``
 * ``FacetIntegerField``
 * ``FacetMultiValueField``
+
+.. note::
+
+  There is no faceted variant of the n-gram fields. Because of how the engine
+  generates n-grams, faceting on these field types (``NgramField`` &
+  ``EdgeNgram``) would make very little sense.
 
 
 Usage
@@ -51,13 +61,13 @@ within a ``SearchIndex``. You use them in a declarative manner, just like
 fields in ``django.forms.Form`` or ``django.db.models.Model`` objects. For
 example::
 
-    from haystack.indexes import *
+    from haystack import indexes
     
     
-    class NoteIndex(SearchIndex):
-        text = CharField(document=True, use_template=True)
-        author = CharField(model_attr='user')
-        pub_date = DateTimeField(model_attr='pub_date')
+    class NoteIndex(indexes.SearchIndex):
+        text = indexes.CharField(document=True, use_template=True)
+        author = indexes.CharField(model_attr='user')
+        pub_date = indexes.DateTimeField(model_attr='pub_date')
 
 This will hook up those fields with the index and, when updating a ``Model``
 object, pull the relevant data out and prepare it for storage in the index.
@@ -205,7 +215,7 @@ Method Reference
 ``__init__``
 ------------
 
-.. method:: SearchField.__init__(self, model_attr=None, use_template=False, template_name=None, document=False, indexed=True, stored=True, faceted=False, default=NOT_PROVIDED, null=False, index_fieldname=None, facet_class=None, weight=1.0)
+.. method:: SearchField.__init__(self, model_attr=None, use_template=False, template_name=None, document=False, indexed=True, stored=True, faceted=False, default=NOT_PROVIDED, null=False, index_fieldname=None, facet_class=None, boost=1.0, weight=None)
 
 Instantiates a fresh ``SearchField`` instance.
 

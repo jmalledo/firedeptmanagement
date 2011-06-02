@@ -2,15 +2,13 @@ from django import forms
 from django.db import models
 from django.utils.text import capfirst
 from django.utils.translation import ugettext_lazy as _
-import haystack
+from haystack import connections
+from haystack.constants import DEFAULT_ALIAS
 from haystack.query import SearchQuerySet, EmptySearchQuerySet
 
 
-def model_choices(site=None):
-    if site is None:
-        site = haystack.site
-    
-    choices = [("%s.%s" % (m._meta.app_label, m._meta.module_name), capfirst(unicode(m._meta.verbose_name_plural))) for m in site.get_indexed_models()]
+def model_choices(using=DEFAULT_ALIAS):
+    choices = [("%s.%s" % (m._meta.app_label, m._meta.module_name), capfirst(unicode(m._meta.verbose_name_plural))) for m in connections[using].get_unified_index().get_indexed_models()]
     return sorted(choices, key=lambda x: x[1])
 
 
@@ -41,7 +39,7 @@ class SearchForm(forms.Form):
         if not self.is_valid():
             return self.no_query_found()
         
-        if not self.cleaned_data['q']:
+        if not self.cleaned_data.get('q'):
             return self.no_query_found()
         
         sqs = self.searchqueryset.auto_query(self.cleaned_data['q'])
@@ -64,13 +62,23 @@ class HighlightedSearchForm(SearchForm):
 
 
 class FacetedSearchForm(SearchForm):
-    selected_facets = forms.CharField(required=False, widget=forms.HiddenInput)
+    def __init__(self, *args, **kwargs):
+        self.selected_facets = kwargs.pop("selected_facets", [])
+        super(FacetedSearchForm, self).__init__(*args, **kwargs)
     
     def search(self):
         sqs = super(FacetedSearchForm, self).search()
         
-        if hasattr(self, 'cleaned_data') and self.cleaned_data['selected_facets']:
-            sqs = sqs.narrow(self.cleaned_data['selected_facets'])
+        # We need to process each facet to ensure that the field name and the
+        # value are quoted correctly and separately:
+        for facet in self.selected_facets:
+            if ":" not in facet:
+                continue
+            
+            field, value = facet.split(":", 1)
+            
+            if value:
+                sqs = sqs.narrow(u'%s:"%s"' % (field, sqs.query.clean(value)))
         
         return sqs
 
