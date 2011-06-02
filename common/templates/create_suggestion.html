@@ -1,0 +1,26 @@
+{%extends "base.html" %}
+
+{% block top_menu %}
+
+{% endblock %}
+{% block content %}
+
+	<div class="span-12" >
+		{% if form.errors %}
+			<div class="error">Debes escribir algo ;)</div>
+		{% endif %}
+		<h3>
+			Escribe aquí tu sugerencia y presiona el botón guardar
+		</h3>
+		
+		<form method="post" action="{% url create_suggestion %}">
+			{% csrf_token %}
+			<p>{{form.text}}</p>
+			<p><input type="submit" value="Guardar" /></p>
+		</form>
+		{% if thanks %}
+			<div class="success">La sugerencia fue guardada</div>
+		{% endif %}
+	</div>
+
+{% endblock %}

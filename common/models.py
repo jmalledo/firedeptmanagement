@@ -1,6 +1,7 @@
 #coding=utf-8
 from django.db import models
 from common.widgets import LocationField
+from django.forms import ModelForm
 
 class TelephoneNumber(models.Model):
     class Meta:
@@ -209,3 +210,12 @@ class PersonJob(models.Model):
     start_date = models.DateField(verbose_name = u'Fecha de Inicio')
     end_date = models.DateField(verbose_name = u'Fecha de Finalización', null=True, blank=True)
     supervisor = models.ForeignKey(BasePerson, null=True, blank=True, related_name =  'supervised_set', verbose_name = 'Supervisor')
+
+
+class Suggestion(models.Model):
+    date = models.DateTimeField(auto_now=True, verbose_name = u'Fecha')
+    text = models.TextField(verbose_name = u'Sugerencia')
+
+class SuggestionForm(ModelForm):
+    class Meta:
+        model = Suggestion

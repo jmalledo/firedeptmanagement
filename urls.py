@@ -10,14 +10,10 @@ urlpatterns = patterns('',
                        url(r'^login/$', 'django.contrib.auth.views.login', {'template_name': 'login.html'}),
                        url(r'^logout/$', 'django.contrib.auth.views.logout_then_login', name='logout'),
                        url(r'^directorio/$', 'capitalrelacional.views.search_related', name="directorio"),
-
-    # Example:
-    # (r'^bomberos/', include('bomberos.foo.urls')),
-
-    # Uncomment the admin/doc line below and add 'django.contrib.admindocs' 
-    # to INSTALLED_APPS to enable admin documentation:
-    # (r'^admin/doc/', include('django.contrib.admindocs.urls')),
-
-    # Uncomment the next line to enable the admin:
-    (r'^admin/', include(admin.site.urls)),
+                       
+                       url(r'^sugerencias/$', 'common.views.create_suggestion', name="create_suggestion"),
+                       
+                       
+                       #ADMIN
+                       (r'^admin/', include(admin.site.urls)),
 )

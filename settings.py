@@ -125,7 +125,14 @@ STATICFILES_DIRS = (
     STATICFILES_ROOT,
 )
 
-HAYSTACK_SITECONF = 'bomberos.search_sites'
-HAYSTACK_SEARCH_ENGINE = 'xapian'
-HAYSTACK_XAPIAN_PATH = os.path.join(PROJECT_ROOT, 'xapian_index')
-HAYSTACK_WHOOSH_PATH = os.path.join(PROJECT_ROOT, 'whoosh_index')
+HAYSTACK_CONNECTIONS = {
+    'default': {
+        'ENGINE': 'xapian_haystack.xapian_backend.XapianEngine',
+        'PATH': os.path.join(os.path.dirname(__file__), 'xapian_index'),
+    }
+}
+
+SUGGESTION_MAIL_TO = ['jefes@bomberos.usb.ve'] 
+SUGGESTION_MAIL_FROM = "sugerencias@bomberos.usb.ve"
+SUGGESTION_MAIL_SUBJECT = "Hemos recibido una nueva sugerencia"
+    
