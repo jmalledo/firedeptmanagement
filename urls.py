@@ -13,6 +13,7 @@ urlpatterns = patterns('',
                        
                        url(r'^sugerencias/$', 'common.views.create_suggestion', name="create_suggestion"),
                        
+                       url(r'^miperfil/$', 'personal.views.user_profile', name="perfil"),
                        
                        #ADMIN
                        (r'^admin/', include(admin.site.urls)),
