@@ -1,6 +1,9 @@
 #coding=utf-8
 from django.db import models
 from common.models import Person
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 class Rank(models.Model):
     name = models.CharField(max_length=30)
@@ -29,6 +32,7 @@ class Firefigther(Person):
         (u'-', u'Negativo'),
     )
     
+    user = models.OneToOneField(User, null=True, blank= True)
     blood_type = models.CharField(max_length=2, choices=BLOOD_TYPE_CHOICES, null=True, blank=True, verbose_name = u'Factor Sanguineo')
     blood_type_rh = models.CharField(max_length=1, choices=BLOOD_RH_CHOICES, null=True, blank=True, verbose_name = u'RH')
     initials = models.CharField(max_length=4, null=True, blank=True, verbose_name = u'Iniciales')
@@ -61,4 +65,15 @@ class ConditionChange(models.Model):
     firefigther = models.ForeignKey(Firefigther, verbose_name = u'Bombero')
     condition = models.ForeignKey(Condition, verbose_name = u'Condición')
     date = models.DateField(verbose_name = u'Fecha')
+
+@receiver(post_save, sender=User)
+def join_user_profile(sender, instance, created, **kwargs):
+    if created:
+        try:
+            ff = Firefigther.objects.get(primary_email=instance.username+"@bomberos.usb.ve")
+            print ff.primary_email
+            ff.user = instance
+            ff.save()
+        except:
+            pass
     

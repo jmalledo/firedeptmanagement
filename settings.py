@@ -1,5 +1,7 @@
-# Django settings for bomberos project.
 import os
+import logging
+import ldap
+from django_auth_ldap.config import LDAPSearch, PosixGroupType
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 DEBUG = True
@@ -21,64 +23,20 @@ DATABASES = {
         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
     }
 }
-
-#DATABASES = {
-#     'default': {
-#         'ENGINE': 'postgresql_psycopg2', #, 'postgresql', 'mysql', 'sqlite3' or 'oracle'.                                          
-#         'NAME': 'gestion',                      # Or path to database file if using sqlite3.                                       
-#         'USER': 'gestion',                      # Not used with sqlite3.                                                           
-#         'PASSWORD': 'ieQu0Xae',                  # Not used with sqlite3.                                                          
-#         'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.                               
-#         'PORT': '',                      # Set to empty string for default. Not used with sqlite3.                                 
-#     }
-# }
-
-
-# Local time zone for this installation. Choices can be found here:
-# http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
-# although not all choices may be available on all operating systems.
-# On Unix systems, a value of None will cause Django to use the same
-# timezone as the operating system.
-# If running in a Windows environment this must be set to the same as your
-# system time zone.
 TIME_ZONE = 'America/Caracas'
-
-# Language code for this installation. All choices can be found here:
-# http://www.i18nguy.com/unicode/language-identifiers.html
 LANGUAGE_CODE = 'es-ve'
 
 SITE_ID = 1
-
-# If you set this to False, Django will make some optimizations so as not
-# to load the internationalization machinery.
 USE_I18N = True
-
-# If you set this to False, Django will not format dates, numbers and
-# calendars according to the current locale
 USE_L10N = True
-
-# Absolute path to the directory that holds media.
-# Example: "/home/media/media.lawrence.com/"
 MEDIA_ROOT = '/tmp'
-
-# URL that handles the media served from MEDIA_ROOT. Make sure to use a
-# trailing slash if there is a path component (optional in other cases).
-# Examples: "http://media.lawrence.com", "http://example.com/media/"
 MEDIA_URL = ''
-
-# URL prefix for admin media -- CSS, JavaScript and images. Make sure to use a
-# trailing slash.
-# Examples: "http://foo.com/media/", "/media/".
 ADMIN_MEDIA_PREFIX = '/media/'
-
-# Make this unique, and don't share it with anybody.
 SECRET_KEY = 'q@9%tlyv4_v5%!a39d1(l#jq!stz!wo@56bys%cg@u&m9trpjf'
 
-# List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -105,16 +63,19 @@ INSTALLED_APPS = (
     'bomberos.personal',
     'bomberos.capitalrelacional',
     'django.contrib.admin',
-    'haystack'
+    'haystack',
 )
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'static/') 
 MEDIA_URL = '/static/'
 
-LOGIN_URL = "/gestion/login/"
-LOGOUT_URL = "/gestion/logout/"
+#PRODUCCION
+BASE_URL = ""
 
-LOGIN_REDIRECT_URL = "/gestion/"
+LOGIN_URL = BASE_URL+"/login/"
+LOGOUT_URL = BASE_URL+"/logout/"
+
+LOGIN_REDIRECT_URL = BASE_URL+"/"
 
 MAPS_API_KEY = 'ABQIAAAAC9qtn8fifBU1scZsYSdD3hRyNcmkjfmyJTu_rNjoMEKRn-36KhT0opYry6Cx117u6ZYd2yHmDXADxw'
 
@@ -135,4 +96,27 @@ HAYSTACK_CONNECTIONS = {
 SUGGESTION_MAIL_TO = ['jefes@bomberos.usb.ve'] 
 SUGGESTION_MAIL_FROM = "sugerencias@bomberos.usb.ve"
 SUGGESTION_MAIL_SUBJECT = "Hemos recibido una nueva sugerencia"
-    
+
+AUTHENTICATION_BACKENDS = (
+#PRODUCCION
+#    'django_auth_ldap.backend.LDAPBackend',
+    'django.contrib.auth.backends.ModelBackend',
+)
+AUTH_PROFILE_MODULE = "personal.Firefigther"
+
+
+#PRODUCCION
+AUTH_LDAP_BIND_DN = "cn=,dc=bomberos,dc=usb,dc=ve"
+AUTH_LDAP_BIND_PASSWORD = ""
+
+AUTH_LDAP_SERVER_URI = "ldap://localhost"
+AUTH_LDAP_USER_SEARCH = LDAPSearch("ou=users,dc=bomberos,dc=usb,dc=ve", ldap.SCOPE_SUBTREE, "(uid=%(user)s)")
+AUTH_LDAP_GROUP_SEARCH = LDAPSearch("ou=groups,dc=bomberos,dc=usb,dc=ve", ldap.SCOPE_SUBTREE, "(objectClass=posixGroup)")
+AUTH_LDAP_GROUP_TYPE = PosixGroupType()
+AUTH_LDAP_MIRROR_GROUPS = True
+AUTH_LDAP_USER_ATTR_MAP = {"first_name": "givenName", "last_name": "sn", "email":"email"}
+AUTH_LDAP_ALWAYS_UPDATE_USER = True
+
+#logger = logging.getLogger('django_auth_ldap')
+#logger.addHandler(logging.StreamHandler())
+#logger.setLevel(logging.DEBUG)
