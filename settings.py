@@ -64,6 +64,7 @@ INSTALLED_APPS = (
     'bomberos.capitalrelacional',
     'django.contrib.admin',
     'haystack',
+    'django.contrib.staticfiles',
 )
 
 MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'static/') 

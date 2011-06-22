@@ -71,7 +71,6 @@ def join_user_profile(sender, instance, created, **kwargs):
     if created:
         try:
             ff = Firefigther.objects.get(primary_email=instance.username+"@bomberos.usb.ve")
-            print ff.primary_email
             ff.user = instance
             ff.save()
         except:

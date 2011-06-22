@@ -23,7 +23,7 @@ class RelatedIndex(RealTimeSearchIndex):
             data["name"] = self.strip_accents("%s %s" % (instance.first_name, instance.last_name))
             data['model'] = 'RelationalPerson'
             
-            data['type'] = self.strip_accents(instance.type)
+            data['type'] = self.strip_accents(instance.type) if instance.type else ""
             data['type_company'] = "L"
             phones = instance.persontelephonenumber_set.filter(main=True)
             data['telephone'] = str(phones[0]) if len(phones) > 0 else "" 
@@ -32,7 +32,7 @@ class RelatedIndex(RealTimeSearchIndex):
             data['text'] = self.strip_accents("%s %s" % (instance.name, instance.rif))
             data["name"] = self.strip_accents("%s" % instance.name)
             data['model'] = 'RelationalCompany'
-            data['type'] = self.strip_accents(instance.type)
+            data['type'] = self.strip_accents(instance.type) if instance.type else ""
             data['type_company'] = instance.typecompany
             phones = instance.companytelephonenumber_set.filter(main=True)
             data['telephone'] =  str(phones[0]) if len(phones) > 0 else ""
