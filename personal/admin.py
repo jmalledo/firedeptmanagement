@@ -14,8 +14,7 @@ class ConditionChangeInline(admin.StackedInline):
     extra = 1
     
 class FirefigtherAdmin(admin.ModelAdmin):
-    inlines = ()
-    #inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
+    inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
 
 admin.site.register(Firefigther, FirefigtherAdmin)
 admin.site.register(TelephoneNumber)
