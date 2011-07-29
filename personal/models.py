@@ -19,7 +19,7 @@ class Rank(models.Model):
 class Firefigther(Person):
     class Meta:
         verbose_name = "Bombero"
-        ordering = ['number', 'last_name']
+        ordering = ['-number', 'last_name']
         
     BLOOD_TYPE_CHOICES = (
         (u'O', u'O'),

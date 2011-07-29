@@ -14,7 +14,7 @@ class ConditionChangeInline(admin.StackedInline):
     extra = 1
     
 class FirefigtherAdmin(admin.ModelAdmin):
-    list_display = ('number', 'last_name', 'first_name', 'id_document', 'primary_email', 'alternate_email')
+    list_display = ('last_name', 'first_name', 'number', 'id_document', 'primary_email', 'alternate_email')
     list_display_links = ('number', 'last_name', 'first_name')
     inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
 
