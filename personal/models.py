@@ -19,6 +19,7 @@ class Rank(models.Model):
 class Firefigther(Person):
     class Meta:
         verbose_name = "Bombero"
+        ordering = ['number', 'last_name']
         
     BLOOD_TYPE_CHOICES = (
         (u'O', u'O'),
@@ -46,6 +47,9 @@ class RankChange(models.Model):
     firefigther = models.ForeignKey(Firefigther)
     rank_obtained = models.ForeignKey(Rank, verbose_name = u'Rango Obtenido')
     date = models.DateField(verbose_name = u'Fecha')
+    
+    def __unicode__(self):
+        return str(self.rank_obtained) + " "+str(self.date)
 
 class Condition(models.Model):
     class Meta:
@@ -65,6 +69,10 @@ class ConditionChange(models.Model):
     firefigther = models.ForeignKey(Firefigther, verbose_name = u'Bombero')
     condition = models.ForeignKey(Condition, verbose_name = u'Condición')
     date = models.DateField(verbose_name = u'Fecha')
+
+    def __unicode__(self):
+        return str(self.condition) + " "+str(self.date)
+
 
 @receiver(post_save, sender=User)
 def join_user_profile(sender, instance, created, **kwargs):

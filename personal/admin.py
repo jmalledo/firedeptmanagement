@@ -14,6 +14,7 @@ class ConditionChangeInline(admin.StackedInline):
     extra = 1
     
 class FirefigtherAdmin(admin.ModelAdmin):
+    list_display = ('number', 'first_name', 'last_name', 'id_document', 'primary_email', 'alternate_email')
     inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
 
 admin.site.register(Firefigther, FirefigtherAdmin)
