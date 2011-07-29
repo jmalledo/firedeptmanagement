@@ -2,9 +2,9 @@
 from django.http import HttpResponse
 from django.views.generic.simple import direct_to_template
 from haystack.query import SearchQuerySet, SQ
-from capitalrelacional.models import RelationalCompany, RelationalPerson
+from bomberos.capitalrelacional.models import RelationalCompany, RelationalPerson
 from django.shortcuts import render_to_response
-from personal.models import Firefigther
+from bomberos.personal.models import Firefigther
 from django.core.paginator import Paginator
 
 def search_related(request):

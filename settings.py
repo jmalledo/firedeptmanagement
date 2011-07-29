@@ -8,7 +8,7 @@ DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    ('admin', 'webmaster@bomberos.usb.ve'),
+    ('admin', 'smoncada@bomberos.usb.ve'),
 )
 
 MANAGERS = ADMINS
@@ -31,7 +31,7 @@ USE_I18N = True
 USE_L10N = True
 MEDIA_ROOT = '/tmp'
 MEDIA_URL = ''
-ADMIN_MEDIA_PREFIX = '/media/'
+
 SECRET_KEY = 'q@9%tlyv4_v5%!a39d1(l#jq!stz!wo@56bys%cg@u&m9trpjf'
 
 TEMPLATE_LOADERS = (
@@ -67,8 +67,8 @@ INSTALLED_APPS = (
     'django.contrib.staticfiles',
 )
 
-MEDIA_ROOT = os.path.join(PROJECT_ROOT, 'static/') 
-MEDIA_URL = '/static/'
+MEDIA_ROOT = os.path.join(PROJECT_ROOT, '../media/') 
+MEDIA_URL = '/media/'
 
 #PRODUCCION
 BASE_URL = ""
@@ -80,8 +80,9 @@ LOGIN_REDIRECT_URL = BASE_URL+"/"
 
 MAPS_API_KEY = 'ABQIAAAAC9qtn8fifBU1scZsYSdD3hRyNcmkjfmyJTu_rNjoMEKRn-36KhT0opYry6Cx117u6ZYd2yHmDXADxw'
 
-STATICFILES_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static/')
+STATICFILES_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../static/')
 STATICFILES_URL = '/static/'
+STATIC_URL = "/static/"
 
 STATICFILES_DIRS = (
     STATICFILES_ROOT,
@@ -114,7 +115,3 @@ AUTH_LDAP_GROUP_TYPE = PosixGroupType()
 AUTH_LDAP_MIRROR_GROUPS = True
 AUTH_LDAP_USER_ATTR_MAP = {"first_name": "givenName", "last_name": "sn", "email":"email"}
 AUTH_LDAP_ALWAYS_UPDATE_USER = True
-
-#logger = logging.getLogger('django_auth_ldap')
-#logger.addHandler(logging.StreamHandler())
-#logger.setLevel(logging.DEBUG)

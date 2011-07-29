@@ -3,8 +3,8 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'bomberos.settings'
 
-from personal.models import Firefigther
-from common.models import TelephoneNumber, PersonTelephoneNumber
+from bomberos.personal.models import Firefigther
+from bomberos.common.models import TelephoneNumber, PersonTelephoneNumber
 from datetime import date
 
 def main():

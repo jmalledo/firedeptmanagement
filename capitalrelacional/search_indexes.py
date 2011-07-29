@@ -2,8 +2,8 @@
 
 from haystack.indexes import RealTimeSearchIndex, CharField
 from haystack import site
-from capitalrelacional.models import RelationalPerson, RelationalCompany
-from personal.models import Firefigther
+from bomberos.capitalrelacional.models import RelationalPerson, RelationalCompany
+from bomberos.personal.models import Firefigther
 import unicodedata
 
 class RelatedIndex(RealTimeSearchIndex):
@@ -49,9 +49,9 @@ class RelatedIndex(RealTimeSearchIndex):
         return data
 
     def strip_accents(self, s):
-        return ''.join((c for c in unicodedata.normalize('NFD', s) if unicodedata.category(c) != 'Mn'))
+        return ''.join((c for c in unicodedata.normalize(u'NFD', unicode(s)) if unicodedata.category(c) != 'Mn'))
     
 
 site.register(RelationalCompany, RelatedIndex)
 site.register(RelationalPerson, RelatedIndex)
-site.register(Firefigther, RelatedIndex)
+#site.register(Firefigther, RelatedIndex)

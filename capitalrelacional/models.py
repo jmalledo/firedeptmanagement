@@ -1,7 +1,7 @@
 #coding=utf-8
 from django.db import models
-from common.models import BasePerson, Company
-from personal.models import Firefigther
+from bomberos.common.models import BasePerson, Company
+from bomberos.personal.models import Firefigther
 
 CONTACT_TYPE_CHOICES = (
                          (u'C', u'Cliente'),

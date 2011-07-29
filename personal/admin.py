@@ -1,8 +1,8 @@
 from django.contrib import admin
-from personal.models import Firefigther, Rank, RankChange, Condition, ConditionChange
-from common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
+from bomberos.personal.models import Firefigther, Rank, RankChange, Condition, ConditionChange
+from bomberos.common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
     BasePerson, Person
-from common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
+from bomberos.common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
     PersonAdmin, BasePersonAdmin
     
 class RankChangeInline(admin.StackedInline):
@@ -14,7 +14,8 @@ class ConditionChangeInline(admin.StackedInline):
     extra = 1
     
 class FirefigtherAdmin(admin.ModelAdmin):
-    inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
+    inlines = ()
+    #inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
 
 admin.site.register(Firefigther, FirefigtherAdmin)
 admin.site.register(TelephoneNumber)
