@@ -1,7 +1,7 @@
 #coding=utf-8
 from django.db import models
 from bomberos.common.models import BasePerson, Company
-from bomberos.personal.models import Firefigther
+from bomberos.personal.models import Firefighter
 
 CONTACT_TYPE_CHOICES = (
                          (u'C', u'Cliente'),
@@ -51,5 +51,5 @@ class Relationship(models.Model):
         verbose_name_plural = u'Relaciones'
  
     relational_person = models.ForeignKey(RelationalPerson,  verbose_name = u'Persona Relacionada', null=True, blank=True)
-    firefighter = models.ForeignKey(Firefigther,  verbose_name = u'Bombero Relacionado', null=True, blank=True )
+    firefighter = models.ForeignKey(Firefighter,  verbose_name = u'Bombero Relacionado', null=True, blank=True )
     observation = models.TextField(verbose_name = u'Observación', null=True, blank=True)

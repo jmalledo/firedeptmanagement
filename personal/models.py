@@ -16,7 +16,7 @@ class Rank(models.Model):
     def __unicode__(self):
         return self.name
 
-class Firefigther(Person):
+class Firefighter(Person):
     class Meta:
         verbose_name = "Bombero"
         ordering = ['-number', 'last_name']
@@ -44,7 +44,7 @@ class RankChange(models.Model):
     class Meta:
         verbose_name = "Ascenso"
     
-    firefigther = models.ForeignKey(Firefigther)
+    firefighter = models.ForeignKey(Firefighter)
     rank_obtained = models.ForeignKey(Rank, verbose_name = u'Rango Obtenido')
     date = models.DateField(verbose_name = u'Fecha')
     
@@ -66,19 +66,40 @@ class ConditionChange(models.Model):
     class Meta:
         verbose_name = u"Cámbio de Condición"
     
-    firefigther = models.ForeignKey(Firefigther, verbose_name = u'Bombero')
+    firefighter = models.ForeignKey(Firefighter, verbose_name = u'Bombero')
     condition = models.ForeignKey(Condition, verbose_name = u'Condición')
     date = models.DateField(verbose_name = u'Fecha')
 
     def __unicode__(self):
         return str(self.condition) + " "+str(self.date)
 
+class Condecoration(models.Model):
+    class Meta:
+        verbose_name = u"Condecoración"
+        verbose_name_plural = u"Condecoraciones"
+    
+    name = models.CharField(max_length=30, verbose_name = u'Nombre')
+    description = models.TextField(null=True, blank = True, verbose_name = u'Descripción')
+    
+    def __unicode__(self):
+        return self.name
+
+class CondecorationAward(models.Model):
+    class Meta:
+        verbose_name = u"Otorgamiento de Condecoración"
+    
+    firefighter = models.ForeignKey(Firefighter, verbose_name = u'Bombero')
+    condecoration = models.ForeignKey(Condecoration, verbose_name = u'Condecoración')
+    date = models.DateField(verbose_name = u'Fecha')
+
+    def __unicode__(self):
+        return str(self.condecoration) + " "+str(self.date)
 
 @receiver(post_save, sender=User)
 def join_user_profile(sender, instance, created, **kwargs):
     if created:
         try:
-            ff = Firefigther.objects.get(primary_email=instance.username+"@bomberos.usb.ve")
+            ff = Firefighter.objects.get(primary_email=instance.username+"@bomberos.usb.ve")
             ff.user = instance
             ff.save()
         except:

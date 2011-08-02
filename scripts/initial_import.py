@@ -3,7 +3,7 @@
 import os
 os.environ['DJANGO_SETTINGS_MODULE'] = 'bomberos.settings'
 
-from bomberos.personal.models import Firefigther
+from bomberos.personal.models import Firefighter
 from bomberos.common.models import TelephoneNumber, PersonTelephoneNumber
 from datetime import date
 
@@ -12,7 +12,7 @@ def main():
     for line in file.readlines():
         #carnet;Nombre1;Nombre2;apellido1;apellido2;cedula;genero;email1;fechanac;factorsangre;rhsangre;tlf_casa;tlf_cel;email2
         f_list = line.split(";")
-        f = Firefigther()
+        f = Firefighter()
         print f_list[0]
         f.number = int(f_list[0])
         f.first_name= f_list[1]

@@ -1,12 +1,12 @@
 #coding=utf-8
 
-from haystack.indexes import RealTimeSearchIndex, CharField
+from haystack.indexes import SearchIndex, CharField
 from haystack import site
 from bomberos.capitalrelacional.models import RelationalPerson, RelationalCompany
-from bomberos.personal.models import Firefigther
+from bomberos.personal.models import Firefighter
 import unicodedata
 
-class RelatedIndex(RealTimeSearchIndex):
+class RelatedIndex(SearchIndex):
     text = CharField(document=True)
     name = CharField(indexed=False)
     model = CharField(indexed=True)
@@ -37,10 +37,10 @@ class RelatedIndex(RealTimeSearchIndex):
             phones = instance.companytelephonenumber_set.filter(main=True)
             data['telephone'] =  str(phones[0]) if len(phones) > 0 else ""
             data['email'] = instance.website
-        elif type(instance)  == Firefigther:
+        elif type(instance)  == Firefighter:
             data['text'] = self.strip_accents("%s %s %s %s %s %d" % (instance.first_name, instance.first_name_2, instance.last_name, instance.last_name_2, instance.id_document, instance.number))
             data["name"] = self.strip_accents("%s %s" % (instance.first_name, instance.last_name))
-            data['model'] = 'Firefigther'
+            data['model'] = 'Firefighter'
             phones = instance.persontelephonenumber_set.filter(main=True)
             data['telephone'] = str(phones[0]) if len(phones) > 0 else "" 
             data['email'] = instance.primary_email
@@ -54,4 +54,4 @@ class RelatedIndex(RealTimeSearchIndex):
 
 site.register(RelationalCompany, RelatedIndex)
 site.register(RelationalPerson, RelatedIndex)
-#site.register(Firefigther, RelatedIndex)
+site.register(Firefighter, RelatedIndex)

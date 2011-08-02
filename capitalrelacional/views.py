@@ -4,7 +4,7 @@ from django.views.generic.simple import direct_to_template
 from haystack.query import SearchQuerySet, SQ
 from bomberos.capitalrelacional.models import RelationalCompany, RelationalPerson
 from django.shortcuts import render_to_response
-from bomberos.personal.models import Firefigther
+from bomberos.personal.models import Firefighter
 from django.core.paginator import Paginator
 
 def search_related(request):
@@ -13,7 +13,7 @@ def search_related(request):
     type = request.GET.getlist('type')
     page_num = request.GET.get('page', "1")
     
-    sqs = SearchQuerySet().models(RelationalCompany).models(RelationalPerson).models(Firefigther)
+    sqs = SearchQuerySet().models(RelationalCompany).models(RelationalPerson).models(Firefighter)
     
     if query:
         terms = query.lower().split(' ')

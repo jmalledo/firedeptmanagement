@@ -1,5 +1,5 @@
 from django.contrib import admin
-from bomberos.personal.models import Firefigther, Rank, RankChange, Condition, ConditionChange
+from bomberos.personal.models import Firefighter, Rank, RankChange, Condition, ConditionChange
 from bomberos.common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
     BasePerson, Person
 from bomberos.common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
@@ -13,12 +13,12 @@ class ConditionChangeInline(admin.StackedInline):
     model = ConditionChange
     extra = 1
     
-class FirefigtherAdmin(admin.ModelAdmin):
+class FirefighterAdmin(admin.ModelAdmin):
     list_display = ('last_name', 'first_name', 'number', 'id_document', 'primary_email', 'alternate_email')
     list_display_links = ('number', 'last_name', 'first_name')
     inlines = (PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline, ConditionChangeInline, RankChangeInline)
 
-admin.site.register(Firefigther, FirefigtherAdmin)
+admin.site.register(Firefighter, FirefighterAdmin)
 admin.site.register(TelephoneNumber)
 admin.site.register(Degree)
 admin.site.register(Course)

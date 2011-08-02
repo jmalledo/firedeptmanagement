@@ -4,19 +4,19 @@
 <div>
 	<div class="span-20">
 		<div class="span-3">
-			{%if firefigther.picture%}<img src='{{firefigther.picture.url}}'></img>{%endif%}
+			{%if firefighter.picture%}<img src='{{firefighter.picture.url}}'></img>{%endif%}
 		</div>
 		<div class="last">
-		<h1>{{firefigther.current_rank}} {{firefigther.first_name}} {{firefigther.first_name_2}} {{firefigther.last_name}} {{firefigther.last_name_2}}</h1>
-		<h2>{{firefigther.initials}} #{{firefigther.number}} </h2>
+		<h1>{{firefighter.current_rank}} {{firefighter.first_name}} {{firefighter.first_name_2}} {{firefighter.last_name}} {{firefighter.last_name_2}}</h1>
+		<h2>{{firefighter.initials}} #{{firefighter.number}} </h2>
 		</div>
 	</div>
 	<div class="span-20">
 		<ul>
-			<li>Cedula: <strong>{{firefigther.id_document}}</strong></li>
-			<li>Fecha de Nacimiento: <strong>{{firefigther.birth_date}}</strong></li>
-			<li>Sexo: <strong>{{firefigther.gender}}</strong></li>
-			<li>Sangre: <strong>Factor {{firefigther.blood_type}} Rh {{firefigther.blood_type_rh}}</strong></li>
+			<li>Cedula: <strong>{{firefighter.id_document}}</strong></li>
+			<li>Fecha de Nacimiento: <strong>{{firefighter.birth_date}}</strong></li>
+			<li>Sexo: <strong>{{firefighter.gender}}</strong></li>
+			<li>Sangre: <strong>Factor {{firefighter.blood_type}} Rh {{firefighter.blood_type_rh}}</strong></li>
 			
 		</ul>
 	</div>	

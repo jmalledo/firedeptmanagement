@@ -21,6 +21,7 @@ class PersonAddressInline(admin.StackedInline):
 class PersonTelephoneNumberInline(admin.StackedInline):
     model = PersonTelephoneNumber
     extra = 1
+    raw_id_fields = ("telephone_number",)
     
 class PersonAdmin(admin.ModelAdmin):
     inlines = (PersonAddressInline, PersonTelephoneNumberInline)
