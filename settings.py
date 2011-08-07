@@ -29,8 +29,7 @@ LANGUAGE_CODE = 'es-ve'
 SITE_ID = 1
 USE_I18N = True
 USE_L10N = True
-MEDIA_ROOT = '/tmp'
-MEDIA_URL = ''
+
 
 SECRET_KEY = 'q@9%tlyv4_v5%!a39d1(l#jq!stz!wo@56bys%cg@u&m9trpjf'
 
@@ -80,7 +79,8 @@ LOGIN_REDIRECT_URL = BASE_URL+"/"
 
 MAPS_API_KEY = 'ABQIAAAAC9qtn8fifBU1scZsYSdD3hRyNcmkjfmyJTu_rNjoMEKRn-36KhT0opYry6Cx117u6ZYd2yHmDXADxw'
 
-STATICFILES_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../static/')
+STATICFILES_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), './staticfiles/')
+STATIC_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), './static/')
 STATICFILES_URL = '/static/'
 STATIC_URL = "/static/"
 

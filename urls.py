@@ -1,7 +1,9 @@
 from django.conf.urls.defaults import *
+from django.conf import settings
 from settings import MEDIA_ROOT
-
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
 from django.contrib import admin
+from django.conf.urls.static import static
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -14,7 +16,10 @@ urlpatterns = patterns('',
                        url(r'^sugerencias/$', 'bomberos.common.views.create_suggestion', name="create_suggestion"),
                        
                        url(r'^miperfil/$', 'bomberos.personal.views.user_profile', name="perfil"),
+                       url(r'^perfil/(?P<ff_id>\d+)/$', 'bomberos.personal.views.user_profile', name="perfil_f"),
                        
                        #ADMIN
                        (r'^admin/', include(admin.site.urls)),
-)
+) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += staticfiles_urlpatterns()

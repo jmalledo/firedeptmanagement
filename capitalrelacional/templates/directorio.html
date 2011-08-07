@@ -1,44 +1,8 @@
 {%extends "base.html" %}
 			{% block top_menu%}
 			{% endblock %}	
-			{% block left_menu %}
-	<ul>
-		<li>
-			<div style="clear: both;">&nbsp;</div>
-		</li>
-		<li>
-			<h2>Accesos Directos</h2>
-			<ul>
-				<li><a href="{% url base %}">Inicio</a></li>
-				<li><a href="{% url directorio %}">Directorio</a></li>
-			</ul>
-		</li>
-	</ul>
-
-<!-- end #sidebar -->
-<div style="clear: both;">&nbsp;</div>				
-{% endblock %}
-{% block content %}
-	<!--  
-	<div class="span-18" id="type">
-		<div class="span-4">Personas</div>	
-		<div class="span-4">Empresas</div>
-		<div class="span-5">Dependencias USB</div>
-		<div class="span-5 last">Centros Asistenciales/C. Bomberos/Rescate</div>
-	</div>	
-	<div class="span-18" id="search">
-		<div class="span-2 prepend-3">Buscar:</div>
-		<div class="span-4"><input type="text" name="query"/> </div>
-		<div class="span-1 last"><input type="submit" value="Enviar"/> </div>
-	</div>
 	
-	<div class="span-18 last" id="letter_selector">
-		{% for letter in "abcdefghijklmnñopqrstuvwxyz" %}
-			<div style="float: left;"> &nbsp;&nbsp;&nbsp;{{letter}}&nbsp;&nbsp;&nbsp;</div>
-		{% endfor %}
-	</div>
-	-->
-	
+	{% block content %}
 	<form method="get">
 		<div class="span-7 prepend-2" id="query_div">
 			<label for="query">Busqueda:</label> 
@@ -89,7 +53,7 @@
 			<tbody>
 				{%for entity in entities%}
 					<tr>
-						<td>{{entity.name}}</td>
+						<td>{%if entity.type == 'B'%}<a href="{%url perfil_f entity.pk%}">{{entity.name}}</a>{%else%}{{entity.name}}{%endif%}</td>
 						<td>{{entity.telephone}}</td>
 						<td>{{entity.email}}</td>
 						<td></td>

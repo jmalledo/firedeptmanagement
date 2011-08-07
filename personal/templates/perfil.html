@@ -2,23 +2,37 @@
 
 {%block content%}
 <div>
-	<div class="span-20">
+	<div class="span-17">
 		<div class="span-3">
-			{%if firefighter.picture%}<img src='{{firefighter.picture.url}}'></img>{%endif%}
+			{%if firefighter.picture%}<img width="100px" height="120px"  src='{{firefighter.picture.url}}'></img>{%endif%}
 		</div>
 		<div class="last">
-		<h1>{{firefighter.current_rank}} {{firefighter.first_name}} {{firefighter.first_name_2}} {{firefighter.last_name}} {{firefighter.last_name_2}}</h1>
-		<h2>{{firefighter.initials}} #{{firefighter.number}} </h2>
+		<h2>
+			{{firefighter.current_rank}} {{firefighter.first_name}} {{firefighter.first_name_2}} {{firefighter.last_name}} {{firefighter.last_name_2}}
+		</h2>
+		<h2>{%if firefighter.initials%}{{firefighter.initials}}{%endif%} #{{firefighter.number}} </h2>
 		</div>
 	</div>
-	<div class="span-20">
+	<div class="span-8">
+		<h3>Datos Básicos</h3>
 		<ul>
 			<li>Cedula: <strong>{{firefighter.id_document}}</strong></li>
 			<li>Fecha de Nacimiento: <strong>{{firefighter.birth_date}}</strong></li>
 			<li>Sexo: <strong>{{firefighter.gender}}</strong></li>
 			<li>Sangre: <strong>Factor {{firefighter.blood_type}} Rh {{firefighter.blood_type_rh}}</strong></li>
-			
 		</ul>
-	</div>	
+		
+	</div>
+	<div class="span-8 last">
+		<h3>Datos de Contacto:</h3>
+		<ul>
+			{%for phone in firefighter.persontelephonenumber_set.all %}
+				<li>{{phone}}</li>
+			{%endfor%}
+			
+			<li>Email: {{firefighter.primary_email}}</li>
+			<li>Email: {{firefighter.alternate_email}}</li>
+		</ul>
+	</div>
 </div>
 {%endblock%}

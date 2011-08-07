@@ -9,6 +9,7 @@ from django.conf import settings
 def base(request):
     return direct_to_template(request, 'inicio.html')
 
+@login_required
 def create_suggestion(request):
     data = {}
     if request.method == "POST":

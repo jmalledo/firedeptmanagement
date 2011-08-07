@@ -6,7 +6,9 @@ from bomberos.capitalrelacional.models import RelationalCompany, RelationalPerso
 from django.shortcuts import render_to_response
 from bomberos.personal.models import Firefighter
 from django.core.paginator import Paginator
+from django.contrib.auth.decorators import login_required
 
+@login_required
 def search_related(request):
     query = request.GET.get('query', '')
     letter = request.GET.get('letter', '')

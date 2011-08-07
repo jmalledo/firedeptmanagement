@@ -29,6 +29,7 @@
 				<li><a href="#">Operaciones</a></li>
 				<li><a href="#">Prevención</a></li>
 				<li><a href="{% url logout %}">Salir</a></li>
+
 			</ul>
 			{% endblock %}	
 		</div>
@@ -36,11 +37,61 @@
 	<div class="span-24" id="body">
 		<div class="span-6 sidebar" id="left_menu">
 			{% block left_menu %}
-			&nbsp;			
+				<ul>
+			<!-- 								<li>
+<div id="search" >
+							<form method="get" action="#">
+								<div>
+									<input type="text" name="s" id="search-text" value="" />
+									<input type="submit" id="search-submit" value="GO" />
+								</div>
+							</form>
+						</div>
+			 			<div style="clear: both;">&nbsp;</div>
+					</li>-->
+					<li>
+						<h2>Accesos Directos</h2>
+						<ul>
+							<li><a href="/">Inicio</a></li>
+							<li><a href="{% url directorio %}">Directorio</a></li>
+							<li><a href="{% url perfil %}">Mi Perfil</a></li>
+							<li><a href="{% url create_suggestion %}">Sugerencias</a></li>
+							
+					<!--		<li><a href="#">Metus aliquam pellentesque</a></li>
+							<li><a href="#">Suspendisse iaculis mauris</a></li>
+							<li><a href="#">Urnanet non molestie semper</a></li>
+							<li><a href="#">Proin gravida orci porttitor</a></li>-->
+						</ul>
+					</li>
+				<!--	<li>
+						<h2>Blogroll</h2>
+						<ul>
+							<li><a href="#">Aliquam libero</a></li>
+							<li><a href="#">Consectetuer adipiscing elit</a></li>
+							<li><a href="#">Metus aliquam pellentesque</a></li>
+							<li><a href="#">Suspendisse iaculis mauris</a></li>
+							<li><a href="#">Urnanet non molestie semper</a></li>
+							<li><a href="#">Proin gravida orci porttitor</a></li>
+						</ul>
+					</li>
+					<li>
+						<h2>Archives</h2>
+						<ul>
+							<li><a href="#">Aliquam libero</a></li>
+							<li><a href="#">Consectetuer adipiscing elit</a></li>
+							<li><a href="#">Metus aliquam pellentesque</a></li>
+							<li><a href="#">Suspendisse iaculis mauris</a></li>
+							<li><a href="#">Urnanet non molestie semper</a></li>
+							<li><a href="#">Proin gravida orci porttitor</a></li>
+						</ul>
+					</li>-->
+				</ul>
+				<!-- end #sidebar -->
+				<div style="clear: both;">&nbsp;</div>
 			{% endblock %}
 		</div>
 	
-		<div class="span-18 last" id="main_content">
+		<div class="prepend-1 span-17 last" id="main_content">
 			{% block content %}
 			&nbsp;
 			{% endblock %}

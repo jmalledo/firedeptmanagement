@@ -141,7 +141,7 @@ class PersonTelephoneNumber(models.Model):
     main = models.BooleanField(verbose_name = 'Principal', default=True)
     
     def __unicode__(self):
-        return str(self.telephone_number)
+        return self.get_type_display()+": "+str(self.telephone_number)
 
 class CompanyTelephoneNumber(models.Model):
     class Meta:
