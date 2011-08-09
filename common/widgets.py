@@ -6,13 +6,13 @@ class LocationPickerWidget(forms.TextInput):
     class Media:
         css = {
             'all': (
-                settings.MEDIA_URL + 'css/location_picker.css',
+                settings.STATIC_URL + 'css/location_picker.css',
             )
         }
         js = (
             'http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.min.js',
             'http://www.google.com/jsapi?key=' + settings.MAPS_API_KEY,
-            settings.MEDIA_URL + 'js/jquery.location_picker.js',
+            settings.STATIC_URL + 'js/jquery.location_picker.js',
         )
 
     def __init__(self, language=None, attrs=None):

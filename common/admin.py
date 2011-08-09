@@ -35,4 +35,4 @@ class CompanyTelephoneNumberInline(admin.StackedInline):
 
 class CompanyAdmin(admin.ModelAdmin):
     inlines = (CompanyTelephoneNumberInline,)
-        
+    

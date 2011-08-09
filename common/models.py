@@ -160,6 +160,15 @@ class Person(BasePerson):
     class Meta:
         verbose_name = u"Persona"
     
+    
+    CIVIL_STATE_CHOICES = (
+        (u'S', u'Soltero'),
+        (u'C', u'Casado'),
+        (u'V', u'Viudo'),
+        (u'D', u'Divorciado'),
+        
+    )
+    
     birth_date = models.DateField(verbose_name = u'Fecha de Nacimiento', null=True, blank=True)
     birth_place = models.OneToOneField(Address, related_name='born_here', verbose_name = 'Lugar de Nacimiento', null=True, blank=True)
     picture = models.ImageField(upload_to="images/persons/", null=True, blank=True, verbose_name = 'Foto')
@@ -167,7 +176,9 @@ class Person(BasePerson):
     degrees = models.ManyToManyField(Degree, through="PersonDegree", null=True, verbose_name = u'Estudios')
     courses = models.ManyToManyField(Course, through="PersonCourse", null=True, verbose_name = u'Cursos')
     jobs = models.ManyToManyField(Job, through="PersonJob", null=True, verbose_name = u'Trabajos')
-    
+    childs = models.ManyToManyField(BasePerson, null=True, verbose_name = u'Hijos', related_name="child_set")
+    civil_state = models.CharField(verbose_name = u'Estado Civil', max_length=1, choices=CIVIL_STATE_CHOICES, null=True, blank=True)
+
 class PersonAddress(models.Model):
     class Meta:
         verbose_name = u"Dirección"
@@ -181,7 +192,7 @@ class PersonAddress(models.Model):
     type = models.CharField(verbose_name = u'Tipo', max_length=1, choices=ADDRESS_TYPE_CHOICES)
     person = models.ForeignKey(Person, verbose_name = u'Persona')
     address = models.ForeignKey(Address, verbose_name = u'Dirección')
-    
+
 class PersonDegree(models.Model):
     class Meta:
         verbose_name = u"Estudio"
@@ -190,7 +201,7 @@ class PersonDegree(models.Model):
     degree = models.ForeignKey(Degree, verbose_name = u'Estudio')
     start_date = models.DateField(verbose_name = u'Fecha de Inicio')
     end_date = models.DateField(verbose_name = u'Fecha de Finalización', null=True, blank=True)
-    picture = models.ImageField(upload_to="images/degrees/", null=True, blank=True)
+    picture = models.ImageField(upload_to="images/degrees/", null=True, blank=True, verbose_name = u'Imagen Título')
     
 class PersonCourse(models.Model):
     class Meta:
