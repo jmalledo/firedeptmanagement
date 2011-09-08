@@ -1,14 +1,15 @@
 #!/usr/bin/python
 #coding=utf-8
 import os
+import sys
 os.environ['DJANGO_SETTINGS_MODULE'] = 'bomberos.settings'
 
-from bomberos.personal.models import Firefighter
-from bomberos.common.models import TelephoneNumber, PersonTelephoneNumber
+from personal.models import Firefighter
+from common.models import TelephoneNumber, PersonTelephoneNumber
 from datetime import date
 
 def main():
-    file = open('/home/saul/workspace/bomberos/scripts/data/importacion.csv', 'r')
+    file = open(sys.argv[1], 'r')
     for line in file.readlines():
         #carnet;Nombre1;Nombre2;apellido1;apellido2;cedula;genero;email1;fechanac;factorsangre;rhsangre;tlf_casa;tlf_cel;email2
         f_list = line.split(";")
