@@ -50,7 +50,7 @@ a:hover {
 
 
 #header {
-	margin: 10 auto;
+	margin: 10px auto;
 	padding: 10px 0px 0px 10px;
 	margin-bottom: 20px;	
 }
@@ -63,7 +63,7 @@ a:hover {
 
 #logo h1 {
 	margin-left: 100px;
-	padding: 40p 0px 0px 80px;
+	padding: 40px 0px 0px 80px;
 	letter-spacing: -2px;
 	font-size: 3.8em;
 	color: #FFC200;

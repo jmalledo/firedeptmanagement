@@ -1,4 +1,5 @@
-django-haystack==1.1.0
+django-haystack==1.2.4
 xapian-haystack==1.1.5beta
 python-ldap==2.4.3
 django-auth-ldap==1.0.9
+pil==1.1.7

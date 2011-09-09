@@ -176,7 +176,7 @@ class Person(BasePerson):
     degrees = models.ManyToManyField(Degree, through="PersonDegree", null=True, verbose_name = u'Estudios')
     courses = models.ManyToManyField(Course, through="PersonCourse", null=True, verbose_name = u'Cursos')
     jobs = models.ManyToManyField(Job, through="PersonJob", null=True, verbose_name = u'Trabajos')
-    childs = models.ManyToManyField(BasePerson, null=True, verbose_name = u'Hijos', related_name="child_set")
+    childs = models.ManyToManyField(BasePerson, null=True, blank=True, verbose_name = u'Hijos', related_name="child_set")
     civil_state = models.CharField(verbose_name = u'Estado Civil', max_length=1, choices=CIVIL_STATE_CHOICES, null=True, blank=True)
 
 class PersonAddress(models.Model):

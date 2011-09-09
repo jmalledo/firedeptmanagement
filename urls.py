@@ -18,6 +18,8 @@ urlpatterns = patterns('',
                        url(r'^miperfil/$', 'bomberos.personal.views.user_profile', name="perfil"),
                        url(r'^perfil/(?P<ff_id>\d+)/$', 'bomberos.personal.views.user_profile', name="perfil_f"),
                        
+                       url(r'^verplanilla/(?P<ff_id>\d+)/$', 'bomberos.personal.views.view_cnb_form', name="view_cnb_form"),
+                       
                        #ADMIN
                        (r'^admin/', include(admin.site.urls)),
 ) + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

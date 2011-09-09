@@ -10,6 +10,11 @@ def user_profile(request, ff_id=None):
     else:
         firefighter = request.user.get_profile()        
         
-        
     params["firefighter"] = firefighter
     return render_to_response("perfil.html", params)
+
+@login_required
+def view_cnb_form(request, ff_id):
+    firefighter = Firefighter.objects.get(id=ff_id)
+    params = {"ff" : firefighter}    
+    return render_to_response("planilla_cnb.html", params)
