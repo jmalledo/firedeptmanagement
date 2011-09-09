@@ -23,7 +23,7 @@
 		<div style="position: absolute;top: 400px;left: 300px;" class="form_text">{{ff.id_document}}</div>
 		<div style="position: absolute;top: 600px;left: 830px;" class="form_text">{{ff.blood_type}}Rh{{ff.blood_type_rh}}</div>
 		<div style="position: absolute;top: 680px;left: 300px;" class="form_text">{{ff.addresses.all.0.city}}</div>
-		<div style="position: absolute;top: 720px;left: 50px;" class="form_text">{{ff.addresses.all.0.location}}</div>
+		<div style="position: absolute;top: 720px;left: 50px;width: 800px;" class="form_text">{{ff.addresses.all.0.location}}</div>
 		<div style="position: absolute;top: 840px;left:300px;" class="form_text">
 			{%for phone in ff.persontelephonenumber_set.all %}
 				{{phone}}
