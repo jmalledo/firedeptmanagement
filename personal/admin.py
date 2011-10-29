@@ -1,8 +1,8 @@
 from django.contrib import admin
-from bomberos.personal.models import Firefighter, Rank, RankChange, Condition, ConditionChange
-from bomberos.common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
+from firedeptmanagement.personal.models import Firefighter, Rank, RankChange, Condition, ConditionChange
+from firedeptmanagement.common.models import TelephoneNumber, Degree, Course, School, Company, Address, City,\
     BasePerson, Person
-from bomberos.common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
+from firedeptmanagement.common.admin import PersonDegreeInline, PersonCourseInline, PersonJobInline, PersonAddressInline, PersonTelephoneNumberInline,\
     PersonAdmin, BasePersonAdmin
     
 class RankChangeInline(admin.StackedInline):

@@ -1,6 +1,6 @@
 #coding=utf-8
 from django.db import models
-from bomberos.common.widgets import LocationField
+from firedeptmanagement.common.widgets import LocationField
 from django.forms import ModelForm
 
 class TelephoneNumber(models.Model):

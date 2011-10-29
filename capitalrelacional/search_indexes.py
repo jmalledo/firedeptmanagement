@@ -2,8 +2,8 @@
 
 from haystack.indexes import SearchIndex, CharField
 from haystack import site
-from bomberos.capitalrelacional.models import RelationalPerson, RelationalCompany
-from bomberos.personal.models import Firefighter
+from firedeptmanagement.capitalrelacional.models import RelationalPerson, RelationalCompany
+from firedeptmanagement.personal.models import Firefighter
 import unicodedata
 
 class RelatedIndex(SearchIndex):

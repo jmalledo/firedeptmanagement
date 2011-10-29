@@ -58,9 +58,9 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
-    'bomberos.common',
-    'bomberos.personal',
-    'bomberos.capitalrelacional',
+    'firedeptmanagement.common',
+    'firedeptmanagement.personal',
+    'firedeptmanagement.capitalrelacional',
     'django.contrib.admin',
     'haystack',
     'django.contrib.staticfiles',
@@ -88,7 +88,7 @@ STATICFILES_DIRS = (
     STATICFILES_ROOT,
 )
 
-HAYSTACK_SITECONF = 'bomberos.search_sites'
+HAYSTACK_SITECONF = 'firedeptmanagement.search_sites'
 HAYSTACK_SEARCH_ENGINE = 'xapian'
 HAYSTACK_XAPIAN_PATH = os.path.join(os.path.dirname(__file__), 'xapian_index')
 

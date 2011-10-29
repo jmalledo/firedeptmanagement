@@ -1,7 +1,7 @@
 #coding=utf-8
 from django.db import models
-from bomberos.common.models import BasePerson, Company
-from bomberos.personal.models import Firefighter
+from firedeptmanagement.common.models import BasePerson, Company
+from firedeptmanagement.personal.models import Firefighter
 
 CONTACT_TYPE_CHOICES = (
                          (u'C', u'Cliente'),

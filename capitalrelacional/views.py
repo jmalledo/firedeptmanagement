@@ -1,10 +1,8 @@
 #coding=utf-8
-from django.http import HttpResponse
-from django.views.generic.simple import direct_to_template
-from haystack.query import SearchQuerySet, SQ
-from bomberos.capitalrelacional.models import RelationalCompany, RelationalPerson
+from haystack.query import SearchQuerySet
+from firedeptmanagement.capitalrelacional.models import RelationalCompany, RelationalPerson
 from django.shortcuts import render_to_response
-from bomberos.personal.models import Firefighter
+from firedeptmanagement.personal.models import Firefighter
 from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 

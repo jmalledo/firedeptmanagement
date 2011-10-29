@@ -1,6 +1,6 @@
 from django.contrib import admin
-from bomberos.capitalrelacional.models import RelationalPerson, RelationalCompany, Relationship, Position
-from bomberos.common.admin import BasePersonAdmin, CompanyAdmin, CompanyTelephoneNumberInline, PersonTelephoneNumberInline
+from firedeptmanagement.capitalrelacional.models import RelationalPerson, RelationalCompany, Relationship, Position
+from firedeptmanagement.common.admin import CompanyTelephoneNumberInline, PersonTelephoneNumberInline
 
 class RelationshipInline(admin.StackedInline):
     model = Relationship

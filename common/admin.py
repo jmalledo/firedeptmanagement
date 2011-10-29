@@ -1,5 +1,5 @@
 from django.contrib import admin
-from bomberos.common.models import PersonDegree, PersonJob, PersonCourse, PersonAddress, PersonTelephoneNumber, CompanyTelephoneNumber
+from firedeptmanagement.common.models import PersonDegree, PersonJob, PersonCourse, PersonAddress, PersonTelephoneNumber, CompanyTelephoneNumber
 
 class PersonDegreeInline(admin.StackedInline):
     model = PersonDegree
