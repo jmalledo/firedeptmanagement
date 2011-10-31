@@ -116,14 +116,15 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
         if not created:
             return
         
-        ldap = _LDAPConfig.get_ldap()
+        ldap_c = _LDAPConfig.get_ldap()
+
         settings = LDAPSettings()
-        conn = ldap.initialize(settings.AUTH_LDAP_SERVER_URI)
+        conn = ldap_c.initialize(settings.AUTH_LDAP_SERVER_URI)
         conn.simple_bind_s(settings.AUTH_LDAP_BIND_DN, settings.AUTH_LDAP_BIND_PASSWORD)
         for opt, value in settings.AUTH_LDAP_CONNECTION_OPTIONS.iteritems():
             conn.set_option(opt, value)
         
-        username = instance.first_name[0] + instance.last_name
+        username = str(instance.first_name[0]) + str(instance.last_name)
         uid = gid = 1500+instance.id
         new_password = makeSecret(get_pronounceable_password())
         new_user_group = [
@@ -131,38 +132,39 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
                     ('gidNumber', str(gid)),
                     ]
         
-        conn.add_s('cn='+username+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
+        conn.add_s('cn='+str(username)+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
         
         new_user = [
                     ('objectclass', ['inetOrgPerson','posixAccount', 'top']),
                     ('gidNumber', str(gid)),
                     ('uidNumber', str(uid)),
-                    ('cn',  instance.first_name.encode('UTF-8') +" "+ instance.first_name_2.encode('UTF-8')+" "+instance.last_name.encode('UTF-8')+" "+instance.last_name_2.encode('UTF-8')),
                     ('sn',  str(instance)),
-                    ('givenName',  instance.first_name.encode('UTF-8')),
-                    ('displayName',  str(instance)),
-                    ('homeDirectory', '/home/'+username ),
-                    ('loginShell', '/bin/bash' ),
-                    ('userPassword',  new_password),
-                    ('mail', username+"@bomberos.usb.ve"),
+                    ('givenName',str(instance.first_name.encode('UTF-8'))),
+                    ('displayName',  str(instance.first_name.encode('UTF-8'))+" "+str(instance.last_name.encode('UTF-8'))),
+                    ('cn',  str(instance.first_name.encode('UTF-8'))+" "+str(instance.last_name.encode('UTF-8'))),
+                    ('homeDirectory', str('/home/')+str(username)+'/'),
+                    ('loginShell', str('/bin/bash') ),
+                    ('userPassword',  str(new_password)),
+                    ('mail', str(username)+str("@bomberos.usb.ve")),
                     ]
         
-        conn.add_s('uid='+username+',ou=users,dc=bomberos,dc=usb,dc=ve', new_user)
-        mod_attrs = [( ldap.MOD_ADD, 'memberUid', username )]
+        conn.add_s('uid='+str(username)+',ou=users,dc=bomberos,dc=usb,dc=ve',new_user)
+        mod_attrs = [( ldap_c.MOD_ADD, 'memberUid', str(username) )]
         conn.modify_s('cn=cbvusb,ou=groups,dc=bomberos,dc=usb,dc=ve', mod_attrs)
         send_welcome_email(str(instance), username, new_password, instance.alternate_email)
         send_webmaster_email(username)
         instance.primary_email = username+"@bomberos.usb.ve"
         instance.save()
-    
-    
+
 def send_welcome_email(name, username, password, email):
     subject = "Bienvenido a CBVUSB-NET"
-    content = "Hola "+ name +", has sido agregado al los sistemas de informacion del CBVUSB.\n\nTu informacion de acceso es:\n\nLogin: "+username+"\nClave: "+password +    "\n\nVisita http://bomberos.usb.ve/confluence/display/publico/Nuevo+en+la+CBVUSB-NET para mas informacion\n\nCualquier duda comunicarse con el administrador via webmaster@bomberos.usb.ve\n\nNOTA: este correo es enviado automaticamente por el servidor.\n\n--\nwebmaster\nCBVUSB"    
-    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, email, fail_silently=True)
+    content = "Hola "+ name +", has sido agregado al los sistemas de informacion del CBVUSB.\n\nTu informacion de acceso es:\n\nLogin\
+: "+username+"\nClave: "+password +    "\n\nVisita http://bomberos.usb.ve/confluence/display/publico/Nuevo+en+la+CBVUSB-NET para mas \
+informacion\n\nCualquier duda comunicarse con el administrador via webmaster@bomberos.usb.ve\n\nNOTA: este correo es enviado automati\
+camente por el servidor.\n\n--\nwebmaster\nCBVUSB"
+    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, [email,], fail_silently=True)
 
 def send_webmaster_email(username):
     subject = "Porfa haz esto como root"
     content = "cd /home\nmkdir "+username+"\nchown "+username+":"+username+" "+username
-    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, 'webmaster@bomberos.usb.ve', fail_silently=True)
-
+    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, ['webmaster@bomberos.usb.ve',], fail_silently=True)
