@@ -125,6 +125,7 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
             conn.set_option(opt, value)
         
         username = str(instance.first_name[0]) + str(instance.last_name)
+        username = username.lower()
         uid = gid = 1500+instance.id
         new_password = makeSecret(get_pronounceable_password())
         new_user_group = [
