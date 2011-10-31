@@ -46,7 +46,7 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.messages.middleware.MessageMiddleware',
 )
 
-ROOT_URLCONF = 'bomberos.urls'
+ROOT_URLCONF = 'firedeptmanagement.urls'
 
 TEMPLATE_DIRS = (
                  os.path.join(PROJECT_ROOT, 'templates'),
@@ -95,6 +95,7 @@ HAYSTACK_XAPIAN_PATH = os.path.join(os.path.dirname(__file__), 'xapian_index')
 SUGGESTION_MAIL_TO = ['jefes@bomberos.usb.ve'] 
 SUGGESTION_MAIL_FROM = "sugerencias@bomberos.usb.ve"
 SUGGESTION_MAIL_SUBJECT = "Hemos recibido una nueva sugerencia"
+DEFAULT_FROM_EMAIL = "webmaster@bomberos.usb.ve"
 
 AUTHENTICATION_BACKENDS = (
 #PRODUCCION

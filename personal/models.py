@@ -4,6 +4,11 @@ from common.models import Person
 from django.contrib.auth.models import User
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django_auth_ldap.config import _LDAPConfig
+from django_auth_ldap.backend import LDAPSettings
+from utils.passwords import get_pronounceable_password, makeSecret
+from django.core.mail import send_mail
+from django.conf import settings
 
 class Rank(models.Model):
     name = models.CharField(max_length=30)
@@ -104,3 +109,61 @@ def join_user_profile(sender, instance, created, **kwargs):
             ff.save()
         except:
             pass
+        
+if settings.AUTH_LDAP_BIND_PASSWORD:
+    @receiver(post_save, sender=Firefighter)
+    def create_ldap_user(sender, instance, created, **kwargs):
+        if not created:
+            return
+        
+        ldap = _LDAPConfig.get_ldap()
+        settings = LDAPSettings()
+        conn = ldap.initialize(settings.AUTH_LDAP_SERVER_URI)
+        conn.simple_bind_s(settings.AUTH_LDAP_BIND_DN, settings.AUTH_LDAP_BIND_PASSWORD)
+        for opt, value in settings.AUTH_LDAP_CONNECTION_OPTIONS.iteritems():
+            conn.set_option(opt, value)
+        
+        username = instance.first_name[0] + instance.last_name
+        uid = gid = 1500+sender.id
+        new_password = makeSecret(get_pronounceable_password())
+        new_user_group = [
+                    ('objectclass', ['posixGroup','top']),
+                    ('gidNumber', str(gid)),
+                    ('cn', [username] ),
+                    ]
+        
+        conn.add_s('cn='+username+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
+        
+        new_user = [
+                    ('objectclass', ['inetOrgPerson','posixAccount', 'top']),
+                    ('gidNumber', str(gid)),
+                    ('uidNumber', str(uid)),
+                    ('cn',  sender.first_name.encode('UTF-8') +" "+ sender.first_name_2.encode('UTF-8')+" "+sender.last_name.encode('UTF-8')+" "+sender.last_name_2.encode('UTF-8')),
+                    ('sn',  str(sender)),
+                    ('givenName',  sender.first_name.encode('UTF-8')),
+                    ('displayName',  str(sender)),
+                    ('homeDirectory', '/home/'+username ),
+                    ('loginShell', '/bin/bash' ),
+                    ('userPassword',  new_password),
+                    ('mail', username+"@bomberos.usb.ve"),
+                    ]
+        
+        conn.add_s('uid='+username+',ou=users,dc=bomberos,dc=usb,dc=ve', new_user)
+        mod_attrs = [( ldap.MOD_ADD, 'memberUid', username )]
+        conn.modify_s('cn=cbvusb,ou=groups,dc=bomberos,dc=usb,dc=ve', mod_attrs)
+        send_welcome_email(str(sender), username, new_password, sender.alternate_email)
+        send_webmaster_email(username)
+        sender.primary_email = username+"@bomberos.usb.ve"
+        sender.save()
+    
+    
+def send_welcome_email(name, username, password, email):
+    subject = "Bienvenido a CBVUSB-NET"
+    content = "Hola "+ name +", has sido agregado al los sistemas de informacion del CBVUSB.\n\nTu informacion de acceso es:\n\nLogin: "+username+"\nClave: "+password +    "\n\nVisita http://bomberos.usb.ve/confluence/display/publico/Nuevo+en+la+CBVUSB-NET para mas informacion\n\nCualquier duda comunicarse con el administrador via webmaster@bomberos.usb.ve\n\nNOTA: este correo es enviado automaticamente por el servidor.\n\n--\nwebmaster\nCBVUSB"    
+    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, email, fail_silently=True)
+
+def send_webmaster_email(username):
+    subject = "Porfa haz esto como root"
+    content = "cd /home\nmkdir "+username+"\nchown "+username+":"+username+" "+username
+    send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, 'webmaster@bomberos.usb.ve', fail_silently=True)
+

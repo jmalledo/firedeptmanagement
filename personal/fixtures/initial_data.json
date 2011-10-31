@@ -12,5 +12,7 @@
 {"pk": 11, "model": "personal.rank", "fields": {"name": "Mayor", "type": "Oficial Superior", "abrev": "May."}},
 {"pk": 12, "model": "personal.rank", "fields": {"name": "Teniente Coronel", "type": "Oficial Superior", "abrev": "Tte Cnel."}},
 {"pk": 13, "model": "personal.rank", "fields": {"name": "Coronel", "type": "Oficial Superior", "abrev": "Cnel."}},
-{"pk": 14, "model": "personal.rank", "fields": {"name": "Comandante General", "type": "Oficial Superior", "abrev": "Cmdte."}}
+{"pk": 14, "model": "personal.rank", "fields": {"name": "Comandante General", "type": "Oficial Superior", "abrev": "Cmdte."}},
+{"pk": 100, "model": "personal.rank", "fields": {"name": "Alumno", "type": "Alumno", "abrev": "Amno."}}
+
 ]
