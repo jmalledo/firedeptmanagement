@@ -129,7 +129,7 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
         new_user_group = [
                     ('objectclass', ['posixGroup','top']),
                     ('gidNumber', str(gid)),
-                    ('cn', [username] ),
+                    ('cn', username ),
                     ]
         
         conn.add_s('cn='+username+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
