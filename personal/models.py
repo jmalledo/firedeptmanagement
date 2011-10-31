@@ -124,7 +124,7 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
             conn.set_option(opt, value)
         
         username = instance.first_name[0] + instance.last_name
-        uid = gid = 1500+sender.id
+        uid = gid = 1500+instance.id
         new_password = makeSecret(get_pronounceable_password())
         new_user_group = [
                     ('objectclass', ['posixGroup','top']),
@@ -138,10 +138,10 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
                     ('objectclass', ['inetOrgPerson','posixAccount', 'top']),
                     ('gidNumber', str(gid)),
                     ('uidNumber', str(uid)),
-                    ('cn',  sender.first_name.encode('UTF-8') +" "+ sender.first_name_2.encode('UTF-8')+" "+sender.last_name.encode('UTF-8')+" "+sender.last_name_2.encode('UTF-8')),
-                    ('sn',  str(sender)),
-                    ('givenName',  sender.first_name.encode('UTF-8')),
-                    ('displayName',  str(sender)),
+                    ('cn',  instance.first_name.encode('UTF-8') +" "+ instance.first_name_2.encode('UTF-8')+" "+instance.last_name.encode('UTF-8')+" "+instance.last_name_2.encode('UTF-8')),
+                    ('sn',  str(instance)),
+                    ('givenName',  instance.first_name.encode('UTF-8')),
+                    ('displayName',  str(instance)),
                     ('homeDirectory', '/home/'+username ),
                     ('loginShell', '/bin/bash' ),
                     ('userPassword',  new_password),
@@ -151,10 +151,10 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
         conn.add_s('uid='+username+',ou=users,dc=bomberos,dc=usb,dc=ve', new_user)
         mod_attrs = [( ldap.MOD_ADD, 'memberUid', username )]
         conn.modify_s('cn=cbvusb,ou=groups,dc=bomberos,dc=usb,dc=ve', mod_attrs)
-        send_welcome_email(str(sender), username, new_password, sender.alternate_email)
+        send_welcome_email(str(instance), username, new_password, instance.alternate_email)
         send_webmaster_email(username)
-        sender.primary_email = username+"@bomberos.usb.ve"
-        sender.save()
+        instance.primary_email = username+"@bomberos.usb.ve"
+        instance.save()
     
     
 def send_welcome_email(name, username, password, email):
