@@ -124,16 +124,18 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
         for opt, value in settings.AUTH_LDAP_CONNECTION_OPTIONS.iteritems():
             conn.set_option(opt, value)
         
-        username = str(instance.first_name[0]) + str(instance.last_name)
-        username = username.lower()
+        username = instance.first_name[0] + "".join(instance.last_name.split(" "))
+        username = str(username.lower())
         uid = gid = 1500+instance.id
-        new_password = makeSecret(get_pronounceable_password())
+        new_password = get_pronounceable_password()
         new_user_group = [
                     ('objectclass', ['posixGroup','top']),
                     ('gidNumber', str(gid)),
                     ]
-        
-        conn.add_s('cn='+str(username)+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
+        try:
+            conn.add_s('cn='+str(username)+',ou=groups,dc=bomberos,dc=usb,dc=ve', new_user_group)
+        except:
+            pass
         
         new_user = [
                     ('objectclass', ['inetOrgPerson','posixAccount', 'top']),
@@ -145,13 +147,20 @@ if settings.AUTH_LDAP_BIND_PASSWORD:
                     ('cn',  str(instance.first_name.encode('UTF-8'))+" "+str(instance.last_name.encode('UTF-8'))),
                     ('homeDirectory', str('/home/')+str(username)+'/'),
                     ('loginShell', str('/bin/bash') ),
-                    ('userPassword',  str(new_password)),
+                    ('userPassword', makeSecret(new_password)),
                     ('mail', str(username)+str("@bomberos.usb.ve")),
                     ]
         
-        conn.add_s('uid='+str(username)+',ou=users,dc=bomberos,dc=usb,dc=ve',new_user)
+        try:
+            conn.add_s('uid='+str(username)+',ou=users,dc=bomberos,dc=usb,dc=ve',new_user)
+        except:
+            pass
         mod_attrs = [( ldap_c.MOD_ADD, 'memberUid', str(username) )]
-        conn.modify_s('cn=cbvusb,ou=groups,dc=bomberos,dc=usb,dc=ve', mod_attrs)
+        try:
+            conn.modify_s('cn=cbvusb,ou=groups,dc=bomberos,dc=usb,dc=ve', mod_attrs)
+        except:
+            pass
+        
         send_welcome_email(str(instance), username, new_password, instance.alternate_email)
         send_webmaster_email(username)
         instance.primary_email = username+"@bomberos.usb.ve"
@@ -167,5 +176,5 @@ camente por el servidor.\n\n--\nwebmaster\nCBVUSB"
 
 def send_webmaster_email(username):
     subject = "Porfa haz esto como root"
-    content = "cd /home\nmkdir "+username+"\nchown "+username+":"+username+" "+username
+    content = "cd /home\nmkdir "+username+"\n"+"chown "+username+":"+username+" "+username+"\n"+"echo "+username+"@bomberos.usb.ve | /var/lib/mailman/bin/add_members -r - cbvusb"
     send_mail(subject, content, settings.DEFAULT_FROM_EMAIL, ['webmaster@bomberos.usb.ve',], fail_silently=True)
